@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F5 adds the live event feed, subscribed to `order:event`, with newest events first and a capped history of the latest 100 events.
+Commit F6 adds room subscription controls for `admin:global`, `order:{id}`, `customer:{name}`, and `status:{status}`, including active subscription state and unsubscribe actions.
 
 ## Backend Interfaces
 

@@ -2,6 +2,7 @@ import ConnectionWidget from "../components/common/ConnectionWidget.jsx";
 import SummaryCard from "../components/dashboard/SummaryCard.jsx";
 import LiveEventFeed from "../components/events/LiveEventFeed.jsx";
 import OrdersTable from "../components/orders/OrdersTable.jsx";
+import RoomSubscriptionPanel from "../components/subscriptions/RoomSubscriptionPanel.jsx";
 import { useRealtimeEvents } from "../hooks/useRealtimeEvents.js";
 import AppShell from "../layouts/AppShell.jsx";
 
@@ -48,12 +49,7 @@ export default function Dashboard() {
           <aside className="space-y-6">
             <ConnectionWidget />
             <LiveEventFeed />
-            <section className="border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-              <h2 className="text-sm font-semibold text-zinc-950 dark:text-white">Subscriptions</h2>
-              <div className="mt-5 grid min-h-32 place-items-center text-sm text-zinc-500 dark:text-zinc-400">
-                admin:global
-              </div>
-            </section>
+            <RoomSubscriptionPanel />
           </aside>
         </section>
       </div>

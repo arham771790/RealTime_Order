@@ -3,7 +3,8 @@ import { useSyncExternalStore } from "react";
 const MAX_EVENTS = 100;
 
 let state = {
-  events: []
+  events: [],
+  subscriptions: []
 };
 
 const listeners = new Set();
@@ -36,6 +37,12 @@ export const realtimeStore = {
     setState({
       ...state,
       events: []
+    });
+  },
+  setSubscriptions(subscriptions) {
+    setState({
+      ...state,
+      subscriptions: [...subscriptions].sort()
     });
   },
   getSnapshot() {
