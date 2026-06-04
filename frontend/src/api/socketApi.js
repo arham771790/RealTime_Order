@@ -6,7 +6,6 @@ export function createSocket(options = {}) {
   return io(SOCKET_URL, {
     autoConnect: false,
     reconnection: true,
-    transports: ["websocket"],
     ...options
   });
 }

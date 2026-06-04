@@ -11,7 +11,7 @@ services:
       timeout: 5s
       retries: 10
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d:ro
@@ -25,7 +25,7 @@ services:
       timeout: 5s
       retries: 10
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
 
@@ -37,7 +37,7 @@ services:
 
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     depends_on:
       mailpit:
@@ -60,18 +60,18 @@ services:
       SOCKET_CORS_ORIGIN: http://localhost:5173
       SOCKET_REDIS_ADAPTER_ENABLED: "true"
     ports:
-      - "3000:3000"
+      - "3001:3000"
 
   frontend:
     build:
-      context: .
-      dockerfile: docker/frontend.Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     depends_on:
       backend:
         condition: service_started
     environment:
-      VITE_API_BASE_URL: http://localhost:3000
-      VITE_SOCKET_URL: http://localhost:3000
+      VITE_API_BASE_URL: http://localhost:3001
+      VITE_SOCKET_URL: http://localhost:3001
     ports:
       - "5173:5173"
 
