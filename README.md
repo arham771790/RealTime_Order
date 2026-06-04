@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 12 adds the Redis Pub/Sub layer with publisher and subscriber wrappers, reconnect strategy configuration, ping health checks, and JSON event handling. Listener-to-Redis integration and the frontend dashboard arrive in later commits.
+Commit 13 integrates PostgreSQL change listening with Redis publishing through `OrderChangePipeline`, completing the first LISTEN -> Publish -> Redis path. Websocket broadcasting and the frontend dashboard arrive in later commits.
 
 ## Backend Interfaces
 
@@ -96,6 +96,10 @@ Notification payloads include:
 ## Redis Pub/Sub
 
 Redis events are published to `REDIS_CHANNEL` as JSON strings. The publisher and subscriber expose `connect`, `healthCheck`, and `close` methods, and both use Redis client reconnect strategy configuration.
+
+## Order Change Pipeline
+
+`OrderChangePipeline` listens for parsed `DBChangeListener` `change` events and publishes each event to Redis. Publish failures are logged and emitted as `publish_error` events without stopping the listener.
 
 ## Planned Delivery Roadmap
 
