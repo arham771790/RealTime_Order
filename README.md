@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F1 initializes the React dashboard under `frontend/` with Vite, React 19, TailwindCSS, React Query, Axios, and Socket.IO Client. Dashboard features will be added across the remaining frontend commits.
+Commit F2 adds the initial dashboard layout with summary cards, an orders panel, live event panel, subscription panel, and connection widget. Live data wiring arrives in the following frontend commits.
 
 ## Backend Interfaces
 
