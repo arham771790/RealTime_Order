@@ -56,3 +56,29 @@ describe("orders updated_at trigger migration", () => {
     expect(sql).toContain("BEFORE UPDATE ON orders");
   });
 });
+
+describe("orders notification trigger migration", () => {
+  const sql = readMigration("004_add_order_change_notifications.sql");
+
+  it("creates a trigger function that publishes to order_changes", () => {
+    expect(sql).toContain("CREATE OR REPLACE FUNCTION notify_order_change()");
+    expect(sql).toContain("PERFORM pg_notify('order_changes', notification_payload::TEXT)");
+    expect(sql).toContain("CREATE TRIGGER trg_orders_notify_changes");
+  });
+
+  it("covers insert, update, and delete operations", () => {
+    expect(sql).toContain("IF TG_OP = 'DELETE'");
+    expect(sql).toContain("ELSIF TG_OP = 'UPDATE'");
+    expect(sql).toContain("AFTER INSERT OR UPDATE OR DELETE ON orders");
+  });
+
+  it("defines the expected notification payload fields", () => {
+    expect(sql).toContain("'eventId', gen_random_uuid()");
+    expect(sql).toContain("'operation', TG_OP");
+    expect(sql).toContain("'table', TG_TABLE_NAME");
+    expect(sql).toContain("'occurredAt', CURRENT_TIMESTAMP");
+    expect(sql).toContain("'orderId'");
+    expect(sql).toContain("'old'");
+    expect(sql).toContain("'new'");
+  });
+});

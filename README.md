@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 10 adds a dedicated PostgreSQL `LISTEN order_changes` listener with JSON payload parsing, logging, reconnect scheduling, and graceful stop cleanup. Redis fanout and the frontend dashboard arrive in later commits.
+Commit 11 adds PostgreSQL trigger-based order change notifications for `INSERT`, `UPDATE`, and `DELETE`, published to the `order_changes` channel. Redis fanout and the frontend dashboard arrive in later commits.
 
 ## Backend Interfaces
 
@@ -83,6 +83,16 @@ Outbox Table
 
 `DBChangeListener` uses a dedicated PostgreSQL client for `LISTEN order_changes` and emits parsed `change` events for downstream publishers. It reconnects after client errors or disconnects while the listener is running.
 
+Notification payloads include:
+
+- `eventId`
+- `operation`
+- `table`
+- `occurredAt`
+- `orderId`
+- `old`
+- `new`
+
 ## Planned Delivery Roadmap
 
 ### Backend
@@ -159,6 +169,7 @@ Migration files live in `migrations/` and are intended to run in filename order.
 - `001_create_orders_table.sql` creates `orders` with status values `pending`, `shipped`, and `delivered`.
 - `002_create_outbox_table.sql` creates `outbox_events` for the transactional outbox pattern.
 - `003_add_orders_updated_at_trigger.sql` keeps `orders.updated_at` current on updates.
+- `004_add_order_change_notifications.sql` publishes order row changes with `pg_notify`.
 
 ## Getting Started
 
