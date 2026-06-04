@@ -19,6 +19,16 @@ const DEFAULT_REDIS_MAX_RECONNECT_DELAY_MS = 30000;
 const DEFAULT_OUTBOX_POLL_INTERVAL_MS = 5000;
 const DEFAULT_OUTBOX_BATCH_SIZE = 50;
 const DEFAULT_OUTBOX_MAX_RETRIES = 5;
+const DEFAULT_EMAIL_ENABLED = false;
+const DEFAULT_SMTP_HOST = "localhost";
+const DEFAULT_SMTP_PORT = 1025;
+const DEFAULT_SMTP_SECURE = false;
+const DEFAULT_EMAIL_FROM = "orders@example.com";
+const DEFAULT_DELIVERED_ORDER_NOTIFICATION_TO = "ops@example.com";
+const DEFAULT_EMAIL_RETRY_ATTEMPTS = 3;
+const DEFAULT_EMAIL_RETRY_DELAY_MS = 250;
+const DEFAULT_EMAIL_CIRCUIT_FAILURE_THRESHOLD = 3;
+const DEFAULT_EMAIL_CIRCUIT_RESET_TIMEOUT_MS = 30000;
 
 dotenv.config();
 
@@ -153,6 +163,39 @@ export const env = Object.freeze({
       process.env.OUTBOX_MAX_RETRIES,
       DEFAULT_OUTBOX_MAX_RETRIES
     )
+  }),
+  email: Object.freeze({
+    enabled: parseBoolean("EMAIL_ENABLED", process.env.EMAIL_ENABLED, DEFAULT_EMAIL_ENABLED),
+    from: process.env.EMAIL_FROM ?? DEFAULT_EMAIL_FROM,
+    deliveredOrderNotificationTo:
+      process.env.DELIVERED_ORDER_NOTIFICATION_TO ?? DEFAULT_DELIVERED_ORDER_NOTIFICATION_TO,
+    retryAttempts: parsePositiveInteger(
+      "EMAIL_RETRY_ATTEMPTS",
+      process.env.EMAIL_RETRY_ATTEMPTS,
+      DEFAULT_EMAIL_RETRY_ATTEMPTS
+    ),
+    retryDelayMs: parsePositiveInteger(
+      "EMAIL_RETRY_DELAY_MS",
+      process.env.EMAIL_RETRY_DELAY_MS,
+      DEFAULT_EMAIL_RETRY_DELAY_MS
+    ),
+    circuitFailureThreshold: parsePositiveInteger(
+      "EMAIL_CIRCUIT_FAILURE_THRESHOLD",
+      process.env.EMAIL_CIRCUIT_FAILURE_THRESHOLD,
+      DEFAULT_EMAIL_CIRCUIT_FAILURE_THRESHOLD
+    ),
+    circuitResetTimeoutMs: parsePositiveInteger(
+      "EMAIL_CIRCUIT_RESET_TIMEOUT_MS",
+      process.env.EMAIL_CIRCUIT_RESET_TIMEOUT_MS,
+      DEFAULT_EMAIL_CIRCUIT_RESET_TIMEOUT_MS
+    ),
+    smtp: Object.freeze({
+      host: process.env.SMTP_HOST ?? DEFAULT_SMTP_HOST,
+      port: parsePositiveInteger("SMTP_PORT", process.env.SMTP_PORT, DEFAULT_SMTP_PORT),
+      secure: parseBoolean("SMTP_SECURE", process.env.SMTP_SECURE, DEFAULT_SMTP_SECURE),
+      user: process.env.SMTP_USER || undefined,
+      password: process.env.SMTP_PASSWORD || undefined
+    })
   })
 });
 

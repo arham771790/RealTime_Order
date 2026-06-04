@@ -22,8 +22,18 @@ function createRepository(overrides = {}) {
   };
 }
 
-function createService(repository = createRepository()) {
-  return new OrdersService({ ordersRepository: repository });
+function createNotificationService(overrides = {}) {
+  return {
+    sendDeliveredOrderNotification: jest.fn().mockResolvedValue({ sent: true }),
+    ...overrides
+  };
+}
+
+function createService(
+  repository = createRepository(),
+  notificationService = createNotificationService()
+) {
+  return new OrdersService({ notificationService, ordersRepository: repository });
 }
 
 describe("OrdersService", () => {
@@ -113,6 +123,47 @@ describe("OrdersService", () => {
 
     expect(repository.updateOrder).toHaveBeenCalledWith(1, { status: "shipped" });
     expect(result.status).toBe("shipped");
+  });
+
+  it("sends a delivered-order notification when an order is delivered", async () => {
+    const repository = createRepository({
+      updateOrder: jest.fn().mockResolvedValue({ ...order, status: "delivered" })
+    });
+    const notificationService = createNotificationService();
+    const service = createService(repository, notificationService);
+
+    const result = await service.updateOrderStatus(1, "delivered");
+
+    expect(result.status).toBe("delivered");
+    expect(notificationService.sendDeliveredOrderNotification).toHaveBeenCalledWith({
+      ...order,
+      status: "delivered"
+    });
+  });
+
+  it("isolates delivered-order notification failures", async () => {
+    const repository = createRepository({
+      updateOrder: jest.fn().mockResolvedValue({ ...order, status: "delivered" })
+    });
+    const logger = { error: jest.fn() };
+    const notificationService = createNotificationService({
+      sendDeliveredOrderNotification: jest.fn().mockRejectedValue(new Error("smtp down"))
+    });
+    const service = new OrdersService({
+      logger,
+      notificationService,
+      ordersRepository: repository
+    });
+
+    await expect(service.updateOrderStatus(1, "delivered")).resolves.toEqual({
+      ...order,
+      status: "delivered"
+    });
+    expect(logger.error).toHaveBeenCalledWith({
+      event: "delivered_order_notification_isolated_failure",
+      orderId: 1,
+      error: "smtp down"
+    });
   });
 
   it("rejects unsupported order statuses", async () => {

@@ -90,12 +90,22 @@ function normalizeListOrdersInput(input = {}) {
   };
 }
 
+const noopNotificationService = Object.freeze({
+  sendDeliveredOrderNotification: async () => ({ sent: false, reason: "not_configured" })
+});
+
 export class OrdersService {
-  constructor({ ordersRepository }) {
+  constructor({
+    logger = console,
+    notificationService = noopNotificationService,
+    ordersRepository
+  }) {
     if (!ordersRepository) {
       throw new Error("OrdersService requires an orders repository.");
     }
 
+    this.logger = logger;
+    this.notificationService = notificationService;
     this.ordersRepository = ordersRepository;
   }
 
@@ -128,7 +138,23 @@ export class OrdersService {
       throw new NotFoundError(`Order ${orderId} was not found.`);
     }
 
+    if (order.status === "delivered") {
+      await this.notifyDeliveredOrder(order);
+    }
+
     return order;
+  }
+
+  async notifyDeliveredOrder(order) {
+    try {
+      await this.notificationService.sendDeliveredOrderNotification(order);
+    } catch (error) {
+      this.logger.error({
+        event: "delivered_order_notification_isolated_failure",
+        orderId: order.id,
+        error: error.message
+      });
+    }
   }
 
   async deleteOrder(id) {

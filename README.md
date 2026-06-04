@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 19 adds a static browser demo client at `/demo.html` for Socket.IO connection checks, room subscriptions, and live order event logs.
+Commit 20 adds delivered-order email notifications with SMTP delivery, retry attempts, a circuit breaker, and failure isolation from order status updates.
 
 ## Backend Interfaces
 
@@ -226,6 +226,11 @@ Current environment variables:
 - `OUTBOX_POLL_INTERVAL_MS` for outbox polling cadence
 - `OUTBOX_BATCH_SIZE` for outbox batch publishing
 - `OUTBOX_MAX_RETRIES` for retry cutoff before an outbox event is skipped
+- `EMAIL_ENABLED` to enable delivered-order SMTP notifications
+- `EMAIL_FROM` and `DELIVERED_ORDER_NOTIFICATION_TO` for delivered-order emails
+- `EMAIL_RETRY_ATTEMPTS` and `EMAIL_RETRY_DELAY_MS` for email retry behavior
+- `EMAIL_CIRCUIT_FAILURE_THRESHOLD` and `EMAIL_CIRCUIT_RESET_TIMEOUT_MS` for email circuit breaker behavior
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, and `SMTP_PASSWORD` for SMTP delivery
 
 ## Available Scripts
 
