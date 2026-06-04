@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F9 adds realtime table reconciliation and recent-change row highlighting so create and update events appear in the orders table without a browser refresh.
+Commit F10 adds frontend production polish: responsive shell improvements, persisted dark-mode toggling, and dashboard cards backed by REST data plus realtime events.
 
 ## Backend Interfaces
 

@@ -1,3 +1,5 @@
+import ThemeToggle from "../components/common/ThemeToggle.jsx";
+
 const navItems = [
   { id: "dashboard", label: "Dashboard" },
   { id: "demo", label: "Demo Controls" }
@@ -19,7 +21,7 @@ export default function AppShell({ activePage = "dashboard", children, onNavigat
           <nav className="mt-10 space-y-1">
             {navItems.map((item) => (
               <button
-                className={`block border px-3 py-2 text-sm font-medium ${
+                className={`block w-full border px-3 py-2 text-left text-sm font-medium ${
                   item.id === activePage
                     ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950"
                     : "border-transparent text-zinc-500 hover:border-zinc-200 hover:text-zinc-950 dark:text-zinc-400 dark:hover:border-zinc-800 dark:hover:text-white"
@@ -34,7 +36,7 @@ export default function AppShell({ activePage = "dashboard", children, onNavigat
           </nav>
         </aside>
         <section className="min-w-0 flex-1">
-          <header className="border-b border-zinc-200 bg-white px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950 sm:px-8">
+          <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 px-5 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95 sm:px-8">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
                 <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -44,7 +46,10 @@ export default function AppShell({ activePage = "dashboard", children, onNavigat
                   Operations Dashboard
                 </h2>
               </div>
-              <div className="text-sm text-zinc-500 dark:text-zinc-400">localhost:3000</div>
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                <div className="text-sm text-zinc-500 dark:text-zinc-400">localhost:3000</div>
+              </div>
             </div>
             <nav className="mt-4 flex gap-2 lg:hidden">
               {navItems.map((item) => (

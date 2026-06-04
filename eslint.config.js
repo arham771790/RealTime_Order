@@ -22,6 +22,15 @@ export default [
     }
   },
   {
+    files: ["frontend/src/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.es2024
+      }
+    }
+  },
+  {
     files: ["tests/**/*.js"],
     languageOptions: {
       globals: {
