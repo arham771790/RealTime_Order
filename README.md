@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F3 adds the REST-backed orders table with customer search, status filtering, loading/error/empty states, and the required order columns. Websocket-driven live table updates arrive in later frontend commits.
+Commit F4 adds the frontend Socket.IO connection manager with a shared socket provider, connection status tracking, reconnect state, and latency display in the dashboard widget.
 
 ## Backend Interfaces
 
