@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 3 adds the PostgreSQL database layer: environment-backed pool configuration, startup connection retry, and graceful pool shutdown on process signals. Migrations, orders data access, the realtime pipeline, and the frontend dashboard arrive in later commits.
+Commit 4 adds the initial PostgreSQL schema migrations for `orders`, transactional `outbox_events`, supporting indexes, and automatic `updated_at` maintenance. Orders data access, the realtime pipeline, and the frontend dashboard arrive in later commits.
 
 ## Target Architecture
 
@@ -92,6 +92,14 @@ docker/
 migrations/
 docs/
 ```
+
+## Database Schema
+
+Migration files live in `migrations/` and are intended to run in filename order.
+
+- `001_create_orders_table.sql` creates `orders` with status values `pending`, `shipped`, and `delivered`.
+- `002_create_outbox_table.sql` creates `outbox_events` for the transactional outbox pattern.
+- `003_add_orders_updated_at_trigger.sql` keeps `orders.updated_at` current on updates.
 
 ## Getting Started
 
