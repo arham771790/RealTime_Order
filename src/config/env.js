@@ -9,6 +9,9 @@ const DEFAULT_DATABASE_CONNECTION_TIMEOUT_MS = 5000;
 const DEFAULT_DATABASE_IDLE_TIMEOUT_MS = 30000;
 const DEFAULT_DATABASE_RETRY_ATTEMPTS = 5;
 const DEFAULT_DATABASE_RETRY_DELAY_MS = 1000;
+const DEFAULT_SOCKET_CORS_ORIGIN = "http://localhost:5173";
+const DEFAULT_SOCKET_PING_INTERVAL_MS = 25000;
+const DEFAULT_SOCKET_PING_TIMEOUT_MS = 20000;
 
 dotenv.config();
 
@@ -99,6 +102,19 @@ export const env = Object.freeze({
       DEFAULT_DATABASE_RETRY_DELAY_MS
     ),
     ssl: parseBoolean("DATABASE_SSL", process.env.DATABASE_SSL, false)
+  }),
+  socket: Object.freeze({
+    corsOrigin: process.env.SOCKET_CORS_ORIGIN ?? DEFAULT_SOCKET_CORS_ORIGIN,
+    pingIntervalMs: parsePositiveInteger(
+      "SOCKET_PING_INTERVAL_MS",
+      process.env.SOCKET_PING_INTERVAL_MS,
+      DEFAULT_SOCKET_PING_INTERVAL_MS
+    ),
+    pingTimeoutMs: parsePositiveInteger(
+      "SOCKET_PING_TIMEOUT_MS",
+      process.env.SOCKET_PING_TIMEOUT_MS,
+      DEFAULT_SOCKET_PING_TIMEOUT_MS
+    )
   })
 });
 

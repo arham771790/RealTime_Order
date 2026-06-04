@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 7 adds the REST API for order CRUD operations, including structured error responses and tests over the Express routes. The realtime pipeline and frontend dashboard arrive in later commits.
+Commit 8 adds the Socket.IO infrastructure: connection tracking, heartbeat configuration, disconnect cleanup, and subscribe/unsubscribe room events. Database change listeners, Redis fanout, and the frontend dashboard arrive in later commits.
 
 ## Backend Interfaces
 
@@ -44,6 +44,15 @@ Supported order statuses:
 - `DELETE /api/orders/:id` deletes an order and returns `204 No Content`
 
 Successful order endpoints return `{ "data": ... }`. Errors return `{ "error": { "message": "...", "code": "..." } }`.
+
+## WebSocket API
+
+Socket.IO is attached to the same backend HTTP server.
+
+- `connection:ready` is emitted after a client connects
+- `subscribe` joins a room and acknowledges with `{ ok, room, rooms }`
+- `unsubscribe` leaves a room and acknowledges with `{ ok, room, rooms }`
+- `subscription:updated` is emitted after room membership changes
 
 ## Target Architecture
 
@@ -172,6 +181,9 @@ Current environment variables:
 - `DATABASE_RETRY_ATTEMPTS` for startup database connection checks
 - `DATABASE_RETRY_DELAY_MS` between startup database connection attempts
 - `DATABASE_SSL` to enable PostgreSQL SSL config
+- `SOCKET_CORS_ORIGIN` for browser websocket origins
+- `SOCKET_PING_INTERVAL_MS` for Socket.IO heartbeat interval
+- `SOCKET_PING_TIMEOUT_MS` for Socket.IO heartbeat timeout
 
 ## Available Scripts
 
