@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 8 adds the Socket.IO infrastructure: connection tracking, heartbeat configuration, disconnect cleanup, and subscribe/unsubscribe room events. Database change listeners, Redis fanout, and the frontend dashboard arrive in later commits.
+Commit 9 adds canonical websocket room management for global, order, customer, and status subscriptions. Database change listeners, Redis fanout, and the frontend dashboard arrive in later commits.
 
 ## Backend Interfaces
 
@@ -53,6 +53,13 @@ Socket.IO is attached to the same backend HTTP server.
 - `subscribe` joins a room and acknowledges with `{ ok, room, rooms }`
 - `unsubscribe` leaves a room and acknowledges with `{ ok, room, rooms }`
 - `subscription:updated` is emitted after room membership changes
+
+Supported rooms:
+
+- `admin:global`
+- `order:{id}`
+- `customer:{name}`
+- `status:{status}`
 
 ## Target Architecture
 

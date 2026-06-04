@@ -1,20 +1,4 @@
-const MAX_ROOM_NAME_LENGTH = 200;
-
-function normalizeRoom(payload) {
-  const room = typeof payload === "string" ? payload : payload?.room;
-
-  if (typeof room !== "string" || room.trim().length === 0) {
-    throw new Error("room is required.");
-  }
-
-  const normalizedRoom = room.trim();
-
-  if (normalizedRoom.length > MAX_ROOM_NAME_LENGTH) {
-    throw new Error(`room must be ${MAX_ROOM_NAME_LENGTH} characters or fewer.`);
-  }
-
-  return normalizedRoom;
-}
+import { RoomManager } from "./room-manager.js";
 
 function sendAck(ack, payload) {
   if (typeof ack === "function") {
@@ -23,13 +7,14 @@ function sendAck(ack, payload) {
 }
 
 export class SocketManager {
-  constructor({ io, logger = console } = {}) {
+  constructor({ io, logger = console, roomManager = new RoomManager() } = {}) {
     if (!io) {
       throw new Error("SocketManager requires a Socket.IO server.");
     }
 
     this.io = io;
     this.logger = logger;
+    this.roomManager = roomManager;
     this.connections = new Map();
   }
 
@@ -65,7 +50,7 @@ export class SocketManager {
 
   async subscribe(socket, payload, ack) {
     try {
-      const room = normalizeRoom(payload);
+      const room = this.roomManager.normalizeRoom(payload);
       await socket.join(room);
 
       const connection = this.connections.get(socket.id);
@@ -81,7 +66,7 @@ export class SocketManager {
 
   async unsubscribe(socket, payload, ack) {
     try {
-      const room = normalizeRoom(payload);
+      const room = this.roomManager.normalizeRoom(payload);
       await socket.leave(room);
 
       const connection = this.connections.get(socket.id);

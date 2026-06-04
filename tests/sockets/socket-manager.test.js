@@ -103,6 +103,21 @@ describe("SocketManager", () => {
     expect(ack).toHaveBeenCalledWith({ ok: false, error: "room is required." });
   });
 
+  it("rejects unsupported room names", async () => {
+    const manager = new SocketManager({ io: new FakeIo(), logger: createLogger() });
+    const socket = new FakeSocket();
+    const ack = jest.fn();
+
+    manager.handleConnection(socket);
+    await manager.subscribe(socket, "unknown:room", ack);
+
+    expect(socket.join).not.toHaveBeenCalled();
+    expect(ack).toHaveBeenCalledWith({
+      ok: false,
+      error: "room must be admin:global, order:{id}, customer:{name}, or status:{status}."
+    });
+  });
+
   it("removes connection state on disconnect", () => {
     const manager = new SocketManager({ io: new FakeIo(), logger: createLogger() });
     const socket = new FakeSocket();
