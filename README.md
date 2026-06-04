@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F2 adds the initial dashboard layout with summary cards, an orders panel, live event panel, subscription panel, and connection widget. Live data wiring arrives in the following frontend commits.
+Commit F3 adds the REST-backed orders table with customer search, status filtering, loading/error/empty states, and the required order columns. Websocket-driven live table updates arrive in later frontend commits.
 
 ## Backend Interfaces
 

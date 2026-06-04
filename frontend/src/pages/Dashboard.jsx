@@ -1,5 +1,6 @@
 import ConnectionWidget from "../components/common/ConnectionWidget.jsx";
 import SummaryCard from "../components/dashboard/SummaryCard.jsx";
+import OrdersTable from "../components/orders/OrdersTable.jsx";
 import AppShell from "../layouts/AppShell.jsx";
 
 const summaryCards = [
@@ -39,14 +40,7 @@ export default function Dashboard() {
           ))}
         </section>
         <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
-              <h2 className="text-base font-semibold text-zinc-950 dark:text-white">Orders</h2>
-            </div>
-            <div className="grid min-h-80 place-items-center px-5 py-12 text-sm text-zinc-500 dark:text-zinc-400">
-              Orders table arrives in F3
-            </div>
-          </div>
+          <OrdersTable />
           <aside className="space-y-6">
             <ConnectionWidget />
             <section className="border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
