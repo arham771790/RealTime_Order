@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 5 adds the `OrdersRepository` persistence boundary with CRUD methods for the `orders` table. The service layer, REST API, realtime pipeline, and frontend dashboard arrive in later commits.
+Commit 6 adds the `OrdersService` business layer with validation, status rules, pagination bounds, and custom application errors. The REST API, realtime pipeline, and frontend dashboard arrive in later commits.
 
 ## Backend Interfaces
 
@@ -17,6 +17,22 @@ The orders repository owns SQL access for the `orders` table and maps database r
 - `getOrders({ customerName, status, limit, offset })`
 - `updateOrder(id, { status })`
 - `deleteOrder(id)`
+
+### OrdersService
+
+The orders service owns business validation and not-found behavior before delegating persistence to the repository.
+
+- `createOrder({ customerName, productName, status })`
+- `getOrder(id)`
+- `getOrders({ customerName, status, limit, offset })`
+- `updateOrderStatus(id, status)`
+- `deleteOrder(id)`
+
+Supported order statuses:
+
+- `pending`
+- `shipped`
+- `delivered`
 
 ## Target Architecture
 
