@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 6 adds the `OrdersService` business layer with validation, status rules, pagination bounds, and custom application errors. The REST API, realtime pipeline, and frontend dashboard arrive in later commits.
+Commit 7 adds the REST API for order CRUD operations, including structured error responses and tests over the Express routes. The realtime pipeline and frontend dashboard arrive in later commits.
 
 ## Backend Interfaces
 
@@ -33,6 +33,17 @@ Supported order statuses:
 - `pending`
 - `shipped`
 - `delivered`
+
+## REST API
+
+- `GET /health` returns `{ "status": "ok" }`
+- `GET /api/orders` lists orders and supports `customerName`, `status`, `limit`, and `offset`
+- `GET /api/orders/:id` returns one order
+- `POST /api/orders` creates an order
+- `PATCH /api/orders/:id/status` updates only the order status
+- `DELETE /api/orders/:id` deletes an order and returns `204 No Content`
+
+Successful order endpoints return `{ "data": ... }`. Errors return `{ "error": { "message": "...", "code": "..." } }`.
 
 ## Target Architecture
 

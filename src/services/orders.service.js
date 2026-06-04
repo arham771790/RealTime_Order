@@ -33,12 +33,14 @@ function validateOptionalString(fieldName, value, maxLength = 255) {
   return validateRequiredString(fieldName, value, maxLength);
 }
 
-function validateStatus(status = DEFAULT_ORDER_STATUS) {
-  if (!ORDER_STATUSES.includes(status)) {
+function validateStatus(status, { useDefault = false } = {}) {
+  const normalizedStatus = status ?? (useDefault ? DEFAULT_ORDER_STATUS : undefined);
+
+  if (!ORDER_STATUSES.includes(normalizedStatus)) {
     throw new ValidationError(`status must be one of: ${ORDER_STATUSES.join(", ")}.`);
   }
 
-  return status;
+  return normalizedStatus;
 }
 
 function validatePositiveInteger(fieldName, value) {
@@ -75,7 +77,7 @@ function normalizeCreateOrderInput(input = {}) {
   return {
     customerName: validateRequiredString("customerName", input.customerName),
     productName: validateRequiredString("productName", input.productName),
-    status: validateStatus(input.status)
+    status: validateStatus(input.status, { useDefault: true })
   };
 }
 

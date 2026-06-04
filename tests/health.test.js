@@ -22,7 +22,8 @@ describe("unknown routes", () => {
     expect(response.status).toBe(404);
     expect(response.body).toEqual({
       error: {
-        message: "Route not found: GET /missing-route"
+        message: "Route not found: GET /missing-route",
+        code: "ROUTE_NOT_FOUND"
       }
     });
   });

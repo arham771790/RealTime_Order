@@ -1,9 +1,15 @@
 import { Router } from "express";
 
 import healthRouter from "./routes/health.routes.js";
+import { createOrdersRouter } from "./routes/orders.routes.js";
 
-const router = Router();
+export function createApiRouter(dependencies) {
+  const router = Router();
 
-router.use(healthRouter);
+  router.use(healthRouter);
+  router.use("/api/orders", createOrdersRouter(dependencies));
 
-export default router;
+  return router;
+}
+
+export default createApiRouter;

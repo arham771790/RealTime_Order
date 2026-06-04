@@ -121,6 +121,12 @@ describe("OrdersService", () => {
     await expect(service.updateOrderStatus(1, "cancelled")).rejects.toBeInstanceOf(ValidationError);
   });
 
+  it("requires a status when updating order status", async () => {
+    const service = createService();
+
+    await expect(service.updateOrderStatus(1)).rejects.toBeInstanceOf(ValidationError);
+  });
+
   it("deletes an order", async () => {
     const repository = createRepository();
     const service = createService(repository);
