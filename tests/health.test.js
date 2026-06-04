@@ -28,3 +28,15 @@ describe("unknown routes", () => {
     });
   });
 });
+
+describe("CORS", () => {
+  it("responds to preflight requests", async () => {
+    const app = createApp();
+
+    const response = await request(app).options("/api/orders");
+
+    expect(response.status).toBe(204);
+    expect(response.headers["access-control-allow-origin"]).toBe("http://localhost:5173");
+    expect(response.headers["access-control-allow-methods"]).toContain("PATCH");
+  });
+});

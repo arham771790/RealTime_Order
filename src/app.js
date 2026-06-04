@@ -5,6 +5,7 @@ import express from "express";
 
 import { createDependencies } from "./api/dependencies.js";
 import { createApiRouter } from "./api/router.js";
+import { corsMiddleware } from "./middleware/cors.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestLogger } from "./middleware/request-logger.js";
 
@@ -14,6 +15,7 @@ export function createApp({ dependencies = createDependencies() } = {}) {
   const app = express();
 
   app.disable("x-powered-by");
+  app.use(corsMiddleware());
   app.use(express.json());
   app.use(requestLogger);
   app.use(express.static(publicDir));

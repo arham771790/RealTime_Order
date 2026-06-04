@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: realtime_orders
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d realtime_orders"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  mailpit:
+    image: axllent/mailpit:v1.20
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      mailpit:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/realtime_orders
+      DELIVERED_ORDER_NOTIFICATION_TO: ops@example.com
+      EMAIL_ENABLED: "true"
+      EMAIL_FROM: orders@example.com
+      NODE_ENV: production
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_SECURE: "false"
+      SOCKET_CORS_ORIGIN: http://localhost:5173
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      VITE_API_BASE_URL: http://localhost:3000
+      VITE_SOCKET_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+
+volumes:
+  postgres_data:
+  redis_data:

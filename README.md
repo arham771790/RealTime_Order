@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 20 adds delivered-order email notifications with SMTP delivery, retry attempts, a circuit breaker, and failure isolation from order status updates.
+Commit 21 dockerizes the backend and frontend, adds Docker Compose services for PostgreSQL, Redis, and Mailpit, and enables browser-to-API CORS for the local demo stack.
 
 ## Backend Interfaces
 
@@ -250,6 +250,21 @@ Frontend scripts from `frontend/`:
 - `npm run build`
 - `npm run preview`
 - `npm run lint`
+
+## Docker
+
+Run the full demo stack:
+
+```bash
+docker compose up --build
+```
+
+- Backend: `http://localhost:3000`
+- React dashboard: `http://localhost:5173`
+- Static Socket.IO demo: `http://localhost:3000/demo.html`
+- Mailpit inbox for delivered-order emails: `http://localhost:8025`
+
+PostgreSQL migrations are mounted into the official Postgres init directory and run when the `postgres_data` volume is first created. To rebuild the database from scratch, remove the Compose volumes before starting again.
 
 ## Notes
 
