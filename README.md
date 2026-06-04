@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 22 adds production hardening with Helmet security headers, compression, rate limiting, readiness and metrics endpoints, and graceful shutdown of realtime workers.
+Commit 23 adds the Socket.IO Redis adapter for horizontal scaling and documents sticky-session guidance for multi-instance websocket deployments.
 
 ## Backend Interfaces
 
@@ -219,6 +219,7 @@ Current environment variables:
 - `SOCKET_CORS_ORIGIN` for browser websocket origins
 - `SOCKET_PING_INTERVAL_MS` for Socket.IO heartbeat interval
 - `SOCKET_PING_TIMEOUT_MS` for Socket.IO heartbeat timeout
+- `SOCKET_REDIS_ADAPTER_ENABLED` to enable Socket.IO multi-instance room fanout through Redis
 - `REDIS_URL` for Redis connectivity
 - `REDIS_CHANNEL` for order event fanout
 - `REDIS_RECONNECT_DELAY_MS` for Redis reconnect backoff

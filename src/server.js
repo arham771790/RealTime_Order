@@ -8,6 +8,7 @@ import { registerDatabaseShutdown } from "./db/shutdown.js";
 import { createOrderChangePipeline } from "./listeners/order-change-pipeline.js";
 import { createOutboxProcessor } from "./outbox/outbox-processor.js";
 import { createSocketServer } from "./sockets/socket-server.js";
+import { createSocketRedisAdapter } from "./sockets/socket-redis-adapter.js";
 import { createOrderEventSubscriber } from "./subscribers/order-event-subscriber.js";
 
 export async function startServer({
@@ -17,7 +18,8 @@ export async function startServer({
   port = env.port,
   orderChangePipeline,
   orderEventSubscriber,
-  outboxProcessor
+  outboxProcessor,
+  socketRedisAdapter
 } = {}) {
   await connectWithRetry(dbPool, {
     attempts: env.database.retryAttempts,
@@ -37,8 +39,12 @@ export async function startServer({
   const resolvedOrderEventSubscriber =
     orderEventSubscriber ?? createOrderEventSubscriber({ io, logger });
   const resolvedOutboxProcessor = outboxProcessor ?? createOutboxProcessor({ dbPool, logger });
+  const resolvedSocketRedisAdapter =
+    socketRedisAdapter ??
+    (env.socket.redisAdapterEnabled ? createSocketRedisAdapter({ io, logger }) : null);
 
   try {
+    await resolvedSocketRedisAdapter?.connect();
     await resolvedOrderEventSubscriber.start();
     await resolvedOrderChangePipeline.start();
     await resolvedOutboxProcessor.start();
@@ -46,6 +52,7 @@ export async function startServer({
     await resolvedOutboxProcessor.stop();
     await resolvedOrderEventSubscriber.stop();
     await resolvedOrderChangePipeline.stop();
+    await resolvedSocketRedisAdapter?.close();
     throw error;
   }
 
@@ -68,6 +75,10 @@ export async function startServer({
       {
         name: "order_change_pipeline",
         handler: () => resolvedOrderChangePipeline.stop()
+      },
+      {
+        name: "socket_redis_adapter",
+        handler: () => resolvedSocketRedisAdapter?.close()
       },
       {
         name: "http_server",

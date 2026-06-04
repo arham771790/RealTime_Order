@@ -58,6 +58,7 @@ services:
       SMTP_PORT: 1025
       SMTP_SECURE: "false"
       SOCKET_CORS_ORIGIN: http://localhost:5173
+      SOCKET_REDIS_ADAPTER_ENABLED: "true"
     ports:
       - "3000:3000"
 

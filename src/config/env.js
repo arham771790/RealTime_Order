@@ -133,6 +133,11 @@ export const env = Object.freeze({
       "SOCKET_PING_TIMEOUT_MS",
       process.env.SOCKET_PING_TIMEOUT_MS,
       DEFAULT_SOCKET_PING_TIMEOUT_MS
+    ),
+    redisAdapterEnabled: parseBoolean(
+      "SOCKET_REDIS_ADAPTER_ENABLED",
+      process.env.SOCKET_REDIS_ADAPTER_ENABLED,
+      false
     )
   }),
   redis: Object.freeze({
