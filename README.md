@@ -5,6 +5,7 @@ Production-grade realtime order update platform using Node.js 22, Express, Socke
 The system delivers order create/update/delete events to browser clients without polling. It includes a React dashboard, a static Socket.IO demo page, Docker Compose support, SMTP delivered-order notifications, horizontal websocket scaling, and Prometheus observability.
 
 # LIVE LINK : https://real-time-order-kappa.vercel.app/ 
+ DEMO VIDEO : https://www.loom.com/share/9383df1e303f4063906e87adcf80b638
 
 ## Architecture
 
