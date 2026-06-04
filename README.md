@@ -1,92 +1,194 @@
 # Real-Time Orders System
 
-Production-grade real-time order update platform built incrementally with professional-style commits. The backend will use Node.js, Express, PostgreSQL, Socket.IO, Redis Pub/Sub, PostgreSQL `LISTEN/NOTIFY`, and the transactional outbox pattern to deliver instant order updates without polling.
+Production-grade realtime order update platform using Node.js 22, Express, Socket.IO, PostgreSQL, Redis Pub/Sub, PostgreSQL `LISTEN/NOTIFY`, and the transactional outbox pattern.
 
-## Current Status
+The system delivers order create/update/delete events to browser clients without polling. It includes a React dashboard, a static Socket.IO demo page, Docker Compose support, SMTP delivered-order notifications, horizontal websocket scaling, and Prometheus observability.
 
-Commit 24 adds Prometheus observability for websocket connections, event lag, outbox backlog, outbox publish outcomes, and delivered-email circuit breaker state.
+## Architecture
 
-## Backend Interfaces
+```text
+PostgreSQL orders table
+  -> trigger notify_order_change()
+  -> LISTEN order_changes
+  -> DBChangeListener
+  -> OrderChangePipeline
+  -> RedisPublisher
+  -> Redis Pub/Sub channel
+  -> RedisSubscriber
+  -> OrderEventSubscriber
+  -> 100ms EventCoalescer
+  -> SocketBroadcaster
+  -> Socket.IO rooms
+  -> Browser clients
 
-### OrdersRepository
+Parallel reliability path:
+OrdersRepository transaction
+  -> orders mutation
+  -> outbox_events insert
+  -> OutboxProcessor every 5s
+  -> RedisPublisher
+  -> same Redis/Subscribers/Sockets path
+```
 
-The orders repository owns SQL access for the `orders` table and maps database rows into application objects.
-
-- `createOrder({ customerName, productName, status })`
-- `getOrder(id)`
-- `getOrders({ customerName, status, limit, offset })`
-- `updateOrder(id, { status })`
-- `deleteOrder(id)`
-
-### OrdersService
-
-The orders service owns business validation and not-found behavior before delegating persistence to the repository.
-
-- `createOrder({ customerName, productName, status })`
-- `getOrder(id)`
-- `getOrders({ customerName, status, limit, offset })`
-- `updateOrderStatus(id, status)`
-- `deleteOrder(id)`
-
-Supported order statuses:
-
-- `pending`
-- `shipped`
-- `delivered`
-
-## REST API
-
-- `GET /health` returns `{ "status": "ok" }`
-- `GET /api/orders` lists orders and supports `customerName`, `status`, `limit`, and `offset`
-- `GET /api/orders/:id` returns one order
-- `POST /api/orders` creates an order
-- `PATCH /api/orders/:id/status` updates only the order status
-- `DELETE /api/orders/:id` deletes an order and returns `204 No Content`
-
-Successful order endpoints return `{ "data": ... }`. Errors return `{ "error": { "message": "...", "code": "..." } }`.
-
-## WebSocket API
-
-Socket.IO is attached to the same backend HTTP server.
-
-- `connection:ready` is emitted after a client connects
-- `subscribe` joins a room and acknowledges with `{ ok, room, rooms }`
-- `unsubscribe` leaves a room and acknowledges with `{ ok, room, rooms }`
-- `subscription:updated` is emitted after room membership changes
-- `order:event` is emitted to subscribed rooms when Redis receives an order change event
-
-Supported rooms:
+Supported Socket.IO rooms:
 
 - `admin:global`
 - `order:{id}`
 - `customer:{name}`
 - `status:{status}`
 
-## Target Architecture
+## Folder Structure
 
 ```text
-Postgres
-  -> LISTEN / NOTIFY
-  -> DBChangeListener
-  -> EventPublisher
-  -> Redis Pub/Sub
-  -> RedisSubscriber
-  -> SocketManager
-  -> Browser Clients
-
-Parallel path:
-Outbox Table
-  -> Outbox Processor
-  -> Redis Pub/Sub
+.
+├── docker/
+│   └── frontend.Dockerfile
+├── docs/
+│   ├── client-deduplication.md
+│   ├── monitoring.md
+│   └── scaling.md
+├── frontend/
+│   └── src/
+│       ├── api/
+│       ├── components/
+│       ├── hooks/
+│       ├── layouts/
+│       ├── pages/
+│       ├── store/
+│       └── utils/
+├── migrations/
+├── public/
+├── src/
+│   ├── api/
+│   ├── config/
+│   ├── db/
+│   ├── listeners/
+│   ├── metrics/
+│   ├── middleware/
+│   ├── notifications/
+│   ├── outbox/
+│   ├── publishers/
+│   ├── repositories/
+│   ├── services/
+│   ├── sockets/
+│   ├── subscribers/
+│   └── utils/
+└── tests/
 ```
 
-## Database Change Listener
+## Quick Start
 
-`DBChangeListener` uses a dedicated PostgreSQL client for `LISTEN order_changes` and emits parsed `change` events for downstream publishers. It reconnects after client errors or disconnects while the listener is running.
+Prerequisites:
 
-Notification payloads include:
+- Node.js 22
+- npm
+- Docker and Docker Compose for the full stack
+
+Install backend dependencies:
+
+```bash
+npm install
+```
+
+Install frontend dependencies:
+
+```bash
+cd frontend
+npm install
+```
+
+Copy environment files:
+
+```bash
+cp .env.example .env
+cp frontend/.env.example frontend/.env
+```
+
+## Docker Demo
+
+Run the full system:
+
+```bash
+docker compose up --build
+```
+
+Demo URLs:
+
+- Backend API: `http://localhost:3000`
+- React dashboard: `http://localhost:5173`
+- Static Socket.IO demo: `http://localhost:3000/demo.html`
+- Mailpit email inbox: `http://localhost:8025`
+- Prometheus metrics: `http://localhost:3000/metrics`
+
+PostgreSQL migrations run from `migrations/` when the `postgres_data` volume is first created. To reset the database:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+## API Docs
+
+Health and metrics:
+
+- `GET /health` returns `{ "status": "ok" }`
+- `GET /ready` returns `{ "status": "ready" }`
+- `GET /metrics` returns Prometheus text metrics
+- `GET /metrics/runtime` returns JSON process diagnostics
+
+Orders:
+
+- `GET /api/orders`
+- `GET /api/orders/:id`
+- `POST /api/orders`
+- `PATCH /api/orders/:id/status`
+- `DELETE /api/orders/:id`
+
+Create order body:
+
+```json
+{
+  "customerName": "Ada Lovelace",
+  "productName": "Mechanical Keyboard",
+  "status": "pending"
+}
+```
+
+Update status body:
+
+```json
+{
+  "status": "delivered"
+}
+```
+
+Supported statuses:
+
+- `pending`
+- `shipped`
+- `delivered`
+
+Successful order responses return `{ "data": ... }`. Errors return `{ "error": { "message": "...", "code": "..." } }`.
+
+## WebSocket Docs
+
+Socket.IO connects to the backend origin, usually `http://localhost:3000`.
+
+Server events:
+
+- `connection:ready` confirms socket setup
+- `subscription:updated` returns active rooms
+- `order:event` delivers realtime order changes
+
+Client events:
+
+- `subscribe` with `{ "room": "admin:global" }`
+- `unsubscribe` with `{ "room": "order:42" }`
+
+Order event payloads include:
 
 - `eventId`
+- `eventType`
 - `operation`
 - `table`
 - `occurredAt`
@@ -94,184 +196,144 @@ Notification payloads include:
 - `old`
 - `new`
 
-## Redis Pub/Sub
+## Frontend
 
-Redis events are published to `REDIS_CHANNEL` as JSON strings. The publisher and subscriber expose `connect`, `healthCheck`, and `close` methods, and both use Redis client reconnect strategy configuration.
+The React dashboard demonstrates realtime behavior rather than full ecommerce workflows.
 
-## Order Change Pipeline
+Features:
 
-`OrderChangePipeline` listens for parsed `DBChangeListener` `change` events and publishes each event to Redis. Publish failures are logged and emitted as `publish_error` events without stopping the listener.
+- Live order summary cards
+- Searchable/filterable orders table
+- Realtime row highlighting
+- Live event feed capped at 100 events
+- Room subscription panel
+- Connection status and latency widget
+- Order detail modal with live updates
+- Demo controls for create/update/delete
+- Dark mode and responsive layout
 
-## Socket Broadcasting
-
-`OrderEventSubscriber` consumes Redis events and asks `SocketBroadcaster` to fan each order event out to `admin:global`, `order:{id}`, `customer:{name}`, and `status:{status}` rooms.
-
-## Planned Delivery Roadmap
-
-### Backend
-
-1. `chore: initialize project structure`
-2. `feat: create express server and health endpoint`
-3. `feat: postgres database layer`
-4. `feat: create orders schema and migrations`
-5. `feat: implement orders repository`
-6. `feat: implement orders service layer`
-7. `feat: implement orders REST API`
-8. `feat: implement socket.io infrastructure`
-9. `feat: implement room manager`
-10. `feat: implement postgres LISTEN/NOTIFY listener`
-11. `feat: add database triggers for change notifications`
-12. `feat: implement redis pubsub layer`
-13. `feat: integrate db listener with redis publisher`
-14. `feat: implement websocket event broadcasting`
-15. `feat: implement transactional outbox pattern`
-16. `feat: implement outbox processor`
-17. `feat: implement event coalescing`
-18. `feat: implement client side dedup support`
-19. `feat: add browser demo client`
-20. `feat: add delivered-order email notifications`
-21. `feat: dockerize application`
-22. `feat: production hardening`
-23. `feat: socket.io redis adapter for horizontal scaling`
-24. `feat: observability and monitoring`
-25. `docs: finalize documentation`
-
-### Frontend
-
-The React dashboard work starts after backend Commit 14.
-
-1. `feat(frontend): initialize react dashboard`
-2. `feat(frontend): create dashboard layout`
-3. `feat(frontend): implement orders table`
-4. `feat(frontend): implement socket connection manager`
-5. `feat(frontend): implement live event feed`
-6. `feat(frontend): implement room subscriptions`
-7. `feat(frontend): implement order detail modal`
-8. `feat(frontend): implement demo controls`
-9. `feat(frontend): add realtime row highlighting`
-10. `feat(frontend): production polish and responsive UI`
-
-## Folder Structure
-
-```text
-src/
-├── api/
-├── config/
-├── db/
-├── listeners/
-├── metrics/
-├── middleware/
-├── notifications/
-├── outbox/
-├── publishers/
-├── repositories/
-├── services/
-├── sockets/
-├── subscribers/
-└── utils/
-tests/
-docker/
-migrations/
-docs/
-```
-
-## Database Schema
-
-Migration files live in `migrations/` and are intended to run in filename order.
-
-- `001_create_orders_table.sql` creates `orders` with status values `pending`, `shipped`, and `delivered`.
-- `002_create_outbox_table.sql` creates `outbox_events` for the transactional outbox pattern.
-- `003_add_orders_updated_at_trigger.sql` keeps `orders.updated_at` current on updates.
-- `004_add_order_change_notifications.sql` publishes order row changes with `pg_notify`.
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 22
-- npm 11+
-
-### Install Dependencies
+Run locally:
 
 ```bash
-npm install
+cd frontend
+npm run dev
 ```
 
-### Environment Setup
+## Reliability
 
-Copy `.env.example` to `.env` and adjust values as needed.
+`LISTEN/NOTIFY` provides low-latency fanout from PostgreSQL. The transactional outbox provides a durable parallel path by inserting `outbox_events` in the same database transaction as order mutations.
 
-```bash
-cp .env.example .env
+The outbox processor:
+
+- Polls every `OUTBOX_POLL_INTERVAL_MS`
+- Processes up to `OUTBOX_BATCH_SIZE`
+- Publishes to Redis
+- Marks successful events with `published_at`
+- Increments `retry_count` and stores `last_error` on failure
+
+Browser deduplication uses bounded `eventId` memory to drop duplicate deliveries.
+
+## Scaling Strategy
+
+Enable Socket.IO horizontal scaling with:
+
+```env
+SOCKET_REDIS_ADAPTER_ENABLED=true
 ```
 
-Current environment variables:
+All backend instances should share Redis. The Socket.IO Redis adapter fans out room broadcasts across instances.
 
-- `NODE_ENV` with supported values: `development`, `test`, `production`
-- `PORT` for the backend HTTP server
-- `DATABASE_URL` for the PostgreSQL connection string
-- `DATABASE_POOL_MAX` for the maximum PostgreSQL pool size
-- `DATABASE_CONNECTION_TIMEOUT_MS` for opening new database connections
-- `DATABASE_IDLE_TIMEOUT_MS` for idle pooled connections
-- `DATABASE_RETRY_ATTEMPTS` for startup database connection checks
-- `DATABASE_RETRY_DELAY_MS` between startup database connection attempts
-- `DATABASE_SSL` to enable PostgreSQL SSL config
-- `SOCKET_CORS_ORIGIN` for browser websocket origins
-- `SOCKET_PING_INTERVAL_MS` for Socket.IO heartbeat interval
-- `SOCKET_PING_TIMEOUT_MS` for Socket.IO heartbeat timeout
-- `SOCKET_REDIS_ADAPTER_ENABLED` to enable Socket.IO multi-instance room fanout through Redis
-- `REDIS_URL` for Redis connectivity
-- `REDIS_CHANNEL` for order event fanout
-- `REDIS_RECONNECT_DELAY_MS` for Redis reconnect backoff
-- `REDIS_MAX_RECONNECT_DELAY_MS` for Redis reconnect backoff cap
-- `OUTBOX_POLL_INTERVAL_MS` for outbox polling cadence
-- `OUTBOX_BATCH_SIZE` for outbox batch publishing
-- `OUTBOX_MAX_RETRIES` for retry cutoff before an outbox event is skipped
-- `EMAIL_ENABLED` to enable delivered-order SMTP notifications
-- `EMAIL_FROM` and `DELIVERED_ORDER_NOTIFICATION_TO` for delivered-order emails
-- `EMAIL_RETRY_ATTEMPTS` and `EMAIL_RETRY_DELAY_MS` for email retry behavior
-- `EMAIL_CIRCUIT_FAILURE_THRESHOLD` and `EMAIL_CIRCUIT_RESET_TIMEOUT_MS` for email circuit breaker behavior
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, and `SMTP_PASSWORD` for SMTP delivery
-- `RATE_LIMIT_WINDOW_MS` and `RATE_LIMIT_MAX` for API rate limiting
+Use sticky sessions at the load balancer for websocket upgrades. See [docs/scaling.md](docs/scaling.md).
 
-## Available Scripts
+## Observability
 
-Backend scripts:
+Prometheus metrics are available at `/metrics`.
+
+Important metrics:
+
+- `realtime_orders_socket_connections`
+- `realtime_orders_socket_broadcasts_total`
+- `realtime_orders_event_lag_seconds`
+- `realtime_orders_outbox_backlog`
+- `realtime_orders_outbox_published_total`
+- `realtime_orders_outbox_failed_total`
+- `realtime_orders_email_circuit_state`
+
+See [docs/monitoring.md](docs/monitoring.md) for dashboard and alert ideas.
+
+## Email Notifications
+
+When an order reaches `delivered`, the service sends an SMTP notification if `EMAIL_ENABLED=true`.
+
+Email delivery has:
+
+- Retry attempts
+- Circuit breaker protection
+- Failure isolation so order updates still succeed
+- Mailpit support in Docker Compose
+
+## Environment
+
+Core variables:
+
+- `NODE_ENV`
+- `PORT`
+- `DATABASE_URL`
+- `REDIS_URL`
+- `REDIS_CHANNEL`
+- `SOCKET_CORS_ORIGIN`
+- `SOCKET_REDIS_ADAPTER_ENABLED`
+- `OUTBOX_POLL_INTERVAL_MS`
+- `OUTBOX_BATCH_SIZE`
+- `OUTBOX_MAX_RETRIES`
+- `EMAIL_ENABLED`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `RATE_LIMIT_WINDOW_MS`
+- `RATE_LIMIT_MAX`
+
+See [.env.example](.env.example) for the full list.
+
+## Scripts
+
+Backend:
 
 - `npm run dev`
-- `npm run lint`
-- `npm run lint:fix`
 - `npm run start`
 - `npm run test`
+- `npm run lint`
 - `npm run format`
 - `npm run format:check`
 
-Frontend scripts from `frontend/`:
+Frontend:
 
 - `npm run dev`
 - `npm run build`
 - `npm run preview`
 - `npm run lint`
 
-## Docker
+## Failure Scenarios
 
-Run the full demo stack:
+- PostgreSQL temporarily unavailable: startup retries database connection before serving traffic.
+- Redis unavailable: publishers/subscribers use Redis reconnect strategy and log failures.
+- Outbox publish fails: event stays unpublished with incremented retry metadata.
+- Duplicate event delivery: client store deduplicates by `eventId`.
+- SMTP outage: retry and circuit breaker isolate failures from order updates.
+- Backend instance shutdown: graceful shutdown stops outbox, Redis subscriber, DB listener pipeline, HTTP server, and PostgreSQL pool.
 
-```bash
-docker compose up --build
-```
+## Tradeoffs
 
-- Backend: `http://localhost:3000`
-- React dashboard: `http://localhost:5173`
-- Static Socket.IO demo: `http://localhost:3000/demo.html`
-- Mailpit inbox for delivered-order emails: `http://localhost:8025`
+- `LISTEN/NOTIFY` gives fast delivery but is not durable, so the outbox exists as the reliable path.
+- The outbox processor uses polling for simplicity and operational predictability.
+- Event coalescing reduces burst noise but intentionally delays websocket broadcasts by up to 100ms.
+- The demo frontend uses Vite dev serving in Docker for interview visibility rather than an Nginx production image.
+- `customer:{name}` rooms are convenient for demos but real systems should prefer stable customer ids.
 
-PostgreSQL migrations are mounted into the official Postgres init directory and run when the `postgres_data` volume is first created. To rebuild the database from scratch, remove the Compose volumes before starting again.
+## Future Improvements
 
-## Notes
-
-- The backend is plain JavaScript using ESM modules.
-- The backend starts with `npm run dev` for local development or `npm run start` for a standard process launch.
-- Server startup verifies PostgreSQL connectivity before listening for HTTP requests.
-- `GET /health` returns `{ "status": "ok" }` and is used as the first operational endpoint.
-- Request logging and centralized error middleware are in place so future routes inherit the same behavior.
+- Replace polling outbox with advisory-lock workers for stronger multi-worker coordination.
+- Add database migration tooling with applied-migration tracking.
+- Add OpenAPI generation.
+- Add end-to-end browser tests for the Docker demo flow.
+- Add customer ids and customer email addresses to support customer-specific notifications.
+- Add Grafana dashboard JSON exports.
