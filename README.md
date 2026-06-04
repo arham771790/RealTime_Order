@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 9 adds canonical websocket room management for global, order, customer, and status subscriptions. Database change listeners, Redis fanout, and the frontend dashboard arrive in later commits.
+Commit 10 adds a dedicated PostgreSQL `LISTEN order_changes` listener with JSON payload parsing, logging, reconnect scheduling, and graceful stop cleanup. Redis fanout and the frontend dashboard arrive in later commits.
 
 ## Backend Interfaces
 
@@ -78,6 +78,10 @@ Outbox Table
   -> Outbox Processor
   -> Redis Pub/Sub
 ```
+
+## Database Change Listener
+
+`DBChangeListener` uses a dedicated PostgreSQL client for `LISTEN order_changes` and emits parsed `change` events for downstream publishers. It reconnects after client errors or disconnects while the listener is running.
 
 ## Planned Delivery Roadmap
 
