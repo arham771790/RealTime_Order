@@ -76,6 +76,41 @@ describe("registerDatabaseShutdown", () => {
     });
   });
 
+  it("runs shutdown tasks before closing the pool", async () => {
+    const calls = [];
+    const pool = {
+      end: jest.fn(async () => {
+        calls.push("pool");
+      })
+    };
+    const logger = createLogger();
+    const processRef = createProcessRef();
+
+    registerDatabaseShutdown({
+      pool,
+      logger,
+      processRef,
+      shutdownTasks: [
+        {
+          name: "worker",
+          handler: jest.fn(async () => {
+            calls.push("worker");
+          })
+        }
+      ],
+      signals: ["SIGTERM"]
+    });
+    processRef.emit("SIGTERM", "SIGTERM");
+    await waitForEventLoop();
+
+    expect(calls).toEqual(["worker", "pool"]);
+    expect(logger.info).toHaveBeenCalledWith({
+      event: "shutdown_task_completed",
+      name: "worker",
+      signal: "SIGTERM"
+    });
+  });
+
   it("can unregister shutdown listeners", () => {
     const pool = {
       end: jest.fn()

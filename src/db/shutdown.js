@@ -2,6 +2,7 @@ export function registerDatabaseShutdown({
   pool,
   logger = console,
   processRef = process,
+  shutdownTasks = [],
   signals = ["SIGINT", "SIGTERM"]
 } = {}) {
   if (!pool) {
@@ -19,6 +20,15 @@ export function registerDatabaseShutdown({
     logger.info({ event: "database_shutdown_started", signal });
 
     try {
+      for (const shutdownTask of shutdownTasks) {
+        await shutdownTask.handler();
+        logger.info({
+          event: "shutdown_task_completed",
+          name: shutdownTask.name,
+          signal
+        });
+      }
+
       await pool.end();
       logger.info({ event: "database_shutdown_completed", signal });
     } catch (error) {

@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 21 dockerizes the backend and frontend, adds Docker Compose services for PostgreSQL, Redis, and Mailpit, and enables browser-to-API CORS for the local demo stack.
+Commit 22 adds production hardening with Helmet security headers, compression, rate limiting, readiness and metrics endpoints, and graceful shutdown of realtime workers.
 
 ## Backend Interfaces
 
@@ -231,6 +231,7 @@ Current environment variables:
 - `EMAIL_RETRY_ATTEMPTS` and `EMAIL_RETRY_DELAY_MS` for email retry behavior
 - `EMAIL_CIRCUIT_FAILURE_THRESHOLD` and `EMAIL_CIRCUIT_RESET_TIMEOUT_MS` for email circuit breaker behavior
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, and `SMTP_PASSWORD` for SMTP delivery
+- `RATE_LIMIT_WINDOW_MS` and `RATE_LIMIT_MAX` for API rate limiting
 
 ## Available Scripts
 

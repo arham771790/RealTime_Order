@@ -29,6 +29,8 @@ const DEFAULT_EMAIL_RETRY_ATTEMPTS = 3;
 const DEFAULT_EMAIL_RETRY_DELAY_MS = 250;
 const DEFAULT_EMAIL_CIRCUIT_FAILURE_THRESHOLD = 3;
 const DEFAULT_EMAIL_CIRCUIT_RESET_TIMEOUT_MS = 30000;
+const DEFAULT_RATE_LIMIT_WINDOW_MS = 60000;
+const DEFAULT_RATE_LIMIT_MAX = 300;
 
 dotenv.config();
 
@@ -196,6 +198,18 @@ export const env = Object.freeze({
       user: process.env.SMTP_USER || undefined,
       password: process.env.SMTP_PASSWORD || undefined
     })
+  }),
+  security: Object.freeze({
+    rateLimitWindowMs: parsePositiveInteger(
+      "RATE_LIMIT_WINDOW_MS",
+      process.env.RATE_LIMIT_WINDOW_MS,
+      DEFAULT_RATE_LIMIT_WINDOW_MS
+    ),
+    rateLimitMax: parsePositiveInteger(
+      "RATE_LIMIT_MAX",
+      process.env.RATE_LIMIT_MAX,
+      DEFAULT_RATE_LIMIT_MAX
+    )
   })
 });
 

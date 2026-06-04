@@ -53,7 +53,38 @@ export async function startServer({
     logger.info(`HTTP server listening on port ${port}`);
   });
 
-  registerDatabaseShutdown({ pool: dbPool, logger });
+  registerDatabaseShutdown({
+    pool: dbPool,
+    logger,
+    shutdownTasks: [
+      {
+        name: "outbox_processor",
+        handler: () => resolvedOutboxProcessor.stop()
+      },
+      {
+        name: "order_event_subscriber",
+        handler: () => resolvedOrderEventSubscriber.stop()
+      },
+      {
+        name: "order_change_pipeline",
+        handler: () => resolvedOrderChangePipeline.stop()
+      },
+      {
+        name: "http_server",
+        handler: () =>
+          new Promise((resolve, reject) => {
+            server.close((error) => {
+              if (error) {
+                reject(error);
+                return;
+              }
+
+              resolve();
+            });
+          })
+      }
+    ]
+  });
 
   return server;
 }
