@@ -17,7 +17,16 @@ export default [
       }
     },
     rules: {
-      "no-console": "off"
+      "no-console": "off",
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }]
+    }
+  },
+  {
+    files: ["tests/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.jest
+      }
     }
   },
   eslintConfigPrettier
