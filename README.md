@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 2 adds the first runnable backend slice: an Express server, `GET /health`, request logging, structured error handling, and API smoke tests. The database, realtime pipeline, and frontend dashboard arrive in later commits.
+Commit 3 adds the PostgreSQL database layer: environment-backed pool configuration, startup connection retry, and graceful pool shutdown on process signals. Migrations, orders data access, the realtime pipeline, and the frontend dashboard arrive in later commits.
 
 ## Target Architecture
 
@@ -118,6 +118,13 @@ Current environment variables:
 
 - `NODE_ENV` with supported values: `development`, `test`, `production`
 - `PORT` for the backend HTTP server
+- `DATABASE_URL` for the PostgreSQL connection string
+- `DATABASE_POOL_MAX` for the maximum PostgreSQL pool size
+- `DATABASE_CONNECTION_TIMEOUT_MS` for opening new database connections
+- `DATABASE_IDLE_TIMEOUT_MS` for idle pooled connections
+- `DATABASE_RETRY_ATTEMPTS` for startup database connection checks
+- `DATABASE_RETRY_DELAY_MS` between startup database connection attempts
+- `DATABASE_SSL` to enable PostgreSQL SSL config
 
 ## Available Scripts
 
@@ -132,6 +139,7 @@ Current environment variables:
 ## Notes
 
 - The backend is plain JavaScript using ESM modules.
-- The backend now starts with `npm run dev` for local development or `npm run start` for a standard process launch.
+- The backend starts with `npm run dev` for local development or `npm run start` for a standard process launch.
+- Server startup verifies PostgreSQL connectivity before listening for HTTP requests.
 - `GET /health` returns `{ "status": "ok" }` and is used as the first operational endpoint.
 - Request logging and centralized error middleware are in place so future routes inherit the same behavior.
