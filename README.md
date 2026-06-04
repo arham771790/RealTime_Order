@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 14 adds Redis-to-websocket broadcasting through `OrderEventSubscriber` and `SocketBroadcaster`, completing the LISTEN -> Redis -> Socket.IO fanout path. The React dashboard starts after this backend milestone.
+Commit F1 initializes the React dashboard under `frontend/` with Vite, React 19, TailwindCSS, React Query, Axios, and Socket.IO Client. Dashboard features will be added across the remaining frontend commits.
 
 ## Backend Interfaces
 
@@ -226,6 +226,8 @@ Current environment variables:
 
 ## Available Scripts
 
+Backend scripts:
+
 - `npm run dev`
 - `npm run lint`
 - `npm run lint:fix`
@@ -233,6 +235,13 @@ Current environment variables:
 - `npm run test`
 - `npm run format`
 - `npm run format:check`
+
+Frontend scripts from `frontend/`:
+
+- `npm run dev`
+- `npm run build`
+- `npm run preview`
+- `npm run lint`
 
 ## Notes
 
