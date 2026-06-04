@@ -9,9 +9,24 @@ export function corsMiddleware({
   origin = env.socket.corsOrigin
 } = {}) {
   return (request, response, next) => {
-    response.setHeader("Access-Control-Allow-Origin", origin);
+    const requestOrigin = request.headers.origin;
+    
+    // If it's an array of origins, check if the request origin is allowed
+    if (Array.isArray(origin)) {
+      if (origin.includes(requestOrigin)) {
+        response.setHeader("Access-Control-Allow-Origin", requestOrigin);
+      } else if (origin.length > 0) {
+        // Fallback to first origin if none matched or if requestOrigin is undefined
+        response.setHeader("Access-Control-Allow-Origin", origin[0]);
+      }
+    } else {
+      // Fallback if origin is a string
+      response.setHeader("Access-Control-Allow-Origin", origin);
+    }
+    
     response.setHeader("Access-Control-Allow-Methods", allowedMethods);
     response.setHeader("Access-Control-Allow-Headers", allowedHeaders);
+    response.setHeader("Vary", "Origin");
 
     if (request.method === "OPTIONS") {
       response.status(204).send();
