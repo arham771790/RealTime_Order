@@ -4,7 +4,19 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 4 adds the initial PostgreSQL schema migrations for `orders`, transactional `outbox_events`, supporting indexes, and automatic `updated_at` maintenance. Orders data access, the realtime pipeline, and the frontend dashboard arrive in later commits.
+Commit 5 adds the `OrdersRepository` persistence boundary with CRUD methods for the `orders` table. The service layer, REST API, realtime pipeline, and frontend dashboard arrive in later commits.
+
+## Backend Interfaces
+
+### OrdersRepository
+
+The orders repository owns SQL access for the `orders` table and maps database rows into application objects.
+
+- `createOrder({ customerName, productName, status })`
+- `getOrder(id)`
+- `getOrders({ customerName, status, limit, offset })`
+- `updateOrder(id, { status })`
+- `deleteOrder(id)`
 
 ## Target Architecture
 
