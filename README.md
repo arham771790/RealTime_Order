@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F10 adds frontend production polish: responsive shell improvements, persisted dark-mode toggling, and dashboard cards backed by REST data plus realtime events.
+Commit 15 adds the transactional outbox repository and writes order mutation events to `outbox_events` inside the same PostgreSQL transaction as the order change.
 
 ## Backend Interfaces
 
