@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 17 adds 100ms websocket event coalescing so duplicate order updates collapse into the final event before broadcasting to browser clients.
+Commit 18 adds UUID event-id guarantees, client-side duplicate suppression in the React realtime store, and documentation for bounded event-id deduplication.
 
 ## Backend Interfaces
 

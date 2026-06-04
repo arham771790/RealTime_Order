@@ -1,4 +1,5 @@
 import env from "../config/env.js";
+import { ensureEventId } from "../utils/event-id.js";
 import { createRedisClient } from "../utils/redis-client.js";
 
 export class RedisPublisher {
@@ -24,10 +25,16 @@ export class RedisPublisher {
   async publish(event, { channel = this.channel } = {}) {
     await this.connect();
 
-    const message = JSON.stringify(event);
+    const eventWithId = ensureEventId(event);
+    const message = JSON.stringify(eventWithId);
     const receiverCount = await this.client.publish(channel, message);
 
-    this.logger.info({ event: "redis_event_published", channel, receiverCount });
+    this.logger.info({
+      event: "redis_event_published",
+      channel,
+      eventId: eventWithId.eventId,
+      receiverCount
+    });
     return receiverCount;
   }
 

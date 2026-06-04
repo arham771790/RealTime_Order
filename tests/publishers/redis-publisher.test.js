@@ -38,8 +38,24 @@ describe("RedisPublisher", () => {
     expect(logger.info).toHaveBeenCalledWith({
       event: "redis_event_published",
       channel: "order_events",
+      eventId: "evt-1",
       receiverCount: 2
     });
+  });
+
+  it("adds an event id before publishing events that do not have one", async () => {
+    const client = new FakeRedisClient();
+    const publisher = new RedisPublisher({ client, channel: "order_events" });
+
+    await publisher.publish({ operation: "UPDATE" });
+
+    const [, message] = client.publish.mock.calls[0];
+    const publishedEvent = JSON.parse(message);
+
+    expect(publishedEvent.operation).toBe("UPDATE");
+    expect(publishedEvent.eventId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u
+    );
   });
 
   it("does not reconnect when already connected", async () => {
