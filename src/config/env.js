@@ -12,6 +12,10 @@ const DEFAULT_DATABASE_RETRY_DELAY_MS = 1000;
 const DEFAULT_SOCKET_CORS_ORIGIN = "http://localhost:5173";
 const DEFAULT_SOCKET_PING_INTERVAL_MS = 25000;
 const DEFAULT_SOCKET_PING_TIMEOUT_MS = 20000;
+const DEFAULT_REDIS_URL = "redis://localhost:6379";
+const DEFAULT_REDIS_CHANNEL = "order_events";
+const DEFAULT_REDIS_RECONNECT_DELAY_MS = 1000;
+const DEFAULT_REDIS_MAX_RECONNECT_DELAY_MS = 30000;
 
 dotenv.config();
 
@@ -114,6 +118,20 @@ export const env = Object.freeze({
       "SOCKET_PING_TIMEOUT_MS",
       process.env.SOCKET_PING_TIMEOUT_MS,
       DEFAULT_SOCKET_PING_TIMEOUT_MS
+    )
+  }),
+  redis: Object.freeze({
+    url: process.env.REDIS_URL ?? DEFAULT_REDIS_URL,
+    channel: process.env.REDIS_CHANNEL ?? DEFAULT_REDIS_CHANNEL,
+    reconnectDelayMs: parsePositiveInteger(
+      "REDIS_RECONNECT_DELAY_MS",
+      process.env.REDIS_RECONNECT_DELAY_MS,
+      DEFAULT_REDIS_RECONNECT_DELAY_MS
+    ),
+    maxReconnectDelayMs: parsePositiveInteger(
+      "REDIS_MAX_RECONNECT_DELAY_MS",
+      process.env.REDIS_MAX_RECONNECT_DELAY_MS,
+      DEFAULT_REDIS_MAX_RECONNECT_DELAY_MS
     )
   })
 });

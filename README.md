@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 11 adds PostgreSQL trigger-based order change notifications for `INSERT`, `UPDATE`, and `DELETE`, published to the `order_changes` channel. Redis fanout and the frontend dashboard arrive in later commits.
+Commit 12 adds the Redis Pub/Sub layer with publisher and subscriber wrappers, reconnect strategy configuration, ping health checks, and JSON event handling. Listener-to-Redis integration and the frontend dashboard arrive in later commits.
 
 ## Backend Interfaces
 
@@ -92,6 +92,10 @@ Notification payloads include:
 - `orderId`
 - `old`
 - `new`
+
+## Redis Pub/Sub
+
+Redis events are published to `REDIS_CHANNEL` as JSON strings. The publisher and subscriber expose `connect`, `healthCheck`, and `close` methods, and both use Redis client reconnect strategy configuration.
 
 ## Planned Delivery Roadmap
 
@@ -206,6 +210,10 @@ Current environment variables:
 - `SOCKET_CORS_ORIGIN` for browser websocket origins
 - `SOCKET_PING_INTERVAL_MS` for Socket.IO heartbeat interval
 - `SOCKET_PING_TIMEOUT_MS` for Socket.IO heartbeat timeout
+- `REDIS_URL` for Redis connectivity
+- `REDIS_CHANNEL` for order event fanout
+- `REDIS_RECONNECT_DELAY_MS` for Redis reconnect backoff
+- `REDIS_MAX_RECONNECT_DELAY_MS` for Redis reconnect backoff cap
 
 ## Available Scripts
 
