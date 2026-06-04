@@ -123,7 +123,10 @@ export const env = Object.freeze({
     ssl: parseBoolean("DATABASE_SSL", process.env.DATABASE_SSL, false)
   }),
   socket: Object.freeze({
-    corsOrigin: process.env.SOCKET_CORS_ORIGIN ?? DEFAULT_SOCKET_CORS_ORIGIN,
+    corsOrigin: (process.env.SOCKET_CORS_ORIGIN ?? DEFAULT_SOCKET_CORS_ORIGIN)
+      .split(",")
+      .map(s => s.trim().replace(/\/+$/, ""))
+      .filter(Boolean),
     pingIntervalMs: parsePositiveInteger(
       "SOCKET_PING_INTERVAL_MS",
       process.env.SOCKET_PING_INTERVAL_MS,

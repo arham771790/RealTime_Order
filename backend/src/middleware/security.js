@@ -13,7 +13,7 @@ export function createSecurityMiddleware({
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          connectSrc: ["'self'", env.socket.corsOrigin],
+          connectSrc: ["'self'", ...env.socket.corsOrigin],
           imgSrc: ["'self'", "data:"],
           scriptSrc: ["'self'", "'unsafe-inline'"],
           styleSrc: ["'self'", "'unsafe-inline'"]
