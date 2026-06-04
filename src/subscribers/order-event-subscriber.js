@@ -1,4 +1,5 @@
 import { RedisSubscriber } from "./redis-subscriber.js";
+import { observeOrderEventLag } from "../metrics/prometheus.js";
 import { SocketBroadcaster } from "../sockets/socket-broadcaster.js";
 import { EventCoalescer } from "../utils/event-coalescer.js";
 
@@ -44,6 +45,7 @@ export class OrderEventSubscriber {
 
   forwardEvent(changeEvent) {
     try {
+      observeOrderEventLag(changeEvent);
       const rooms = this.socketBroadcaster.broadcastOrderEvent(changeEvent);
       this.logger.info({
         event: "order_event_forwarded_to_sockets",

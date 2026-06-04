@@ -1,4 +1,5 @@
 import { RoomManager } from "./room-manager.js";
+import { setSocketConnectionCount } from "../metrics/prometheus.js";
 
 function sendAck(ack, payload) {
   if (typeof ack === "function") {
@@ -32,6 +33,7 @@ export class SocketManager {
       rooms: new Set()
     });
 
+    setSocketConnectionCount(this.getConnectionCount());
     this.logger.info({ event: "socket_connected", socketId: socket.id });
     socket.emit("connection:ready", { socketId: socket.id });
 
@@ -82,6 +84,7 @@ export class SocketManager {
 
   handleDisconnect(socket, reason) {
     this.connections.delete(socket.id);
+    setSocketConnectionCount(this.getConnectionCount());
     this.logger.info({ event: "socket_disconnected", socketId: socket.id, reason });
   }
 

@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 23 adds the Socket.IO Redis adapter for horizontal scaling and documents sticky-session guidance for multi-instance websocket deployments.
+Commit 24 adds Prometheus observability for websocket connections, event lag, outbox backlog, outbox publish outcomes, and delivered-email circuit breaker state.
 
 ## Backend Interfaces
 

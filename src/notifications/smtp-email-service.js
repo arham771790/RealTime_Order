@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 
 import env from "../config/env.js";
+import { setEmailCircuitBreakerState } from "../metrics/prometheus.js";
 import { CircuitBreaker, CircuitBreakerOpenError } from "./circuit-breaker.js";
 
 function delay(ms) {
@@ -78,10 +79,12 @@ export class SmtpEmailService {
 
     try {
       await this.circuitBreaker.execute(() => this.sendWithRetry(message));
+      setEmailCircuitBreakerState(this.circuitBreaker.state);
       this.logger.info({ event: "delivered_order_email_sent", orderId: order.id });
 
       return { sent: true };
     } catch (error) {
+      setEmailCircuitBreakerState(this.circuitBreaker.state);
       this.logger.error({
         event: "delivered_order_email_failed",
         orderId: order.id,

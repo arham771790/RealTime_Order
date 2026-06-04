@@ -34,10 +34,22 @@ describe("GET /ready", () => {
 });
 
 describe("GET /metrics", () => {
-  it("returns runtime metrics", async () => {
+  it("returns Prometheus metrics", async () => {
     const app = createApp();
 
     const response = await request(app).get("/metrics");
+
+    expect(response.status).toBe(200);
+    expect(response.headers["content-type"]).toContain("text/plain");
+    expect(response.text).toContain("realtime_orders_socket_connections");
+  });
+});
+
+describe("GET /metrics/runtime", () => {
+  it("returns runtime metrics", async () => {
+    const app = createApp();
+
+    const response = await request(app).get("/metrics/runtime");
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(

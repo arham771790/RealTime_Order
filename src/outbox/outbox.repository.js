@@ -62,6 +62,20 @@ export class OutboxRepository {
     return result.rows.map(mapOutboxRow);
   }
 
+  async countUnpublishedEvents({ maxRetries = 5 } = {}) {
+    const result = await this.pool.query(
+      `
+        SELECT COUNT(*)::INTEGER AS count
+        FROM outbox_events
+        WHERE published_at IS NULL
+          AND retry_count < $1
+      `,
+      [maxRetries]
+    );
+
+    return result.rows[0]?.count ?? 0;
+  }
+
   async markPublished(id, executor = this.pool) {
     const result = await executor.query(
       `

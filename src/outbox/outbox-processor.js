@@ -1,5 +1,10 @@
 import env from "../config/env.js";
 import pool from "../db/pool.js";
+import {
+  recordOutboxFailed,
+  recordOutboxPublished,
+  setOutboxBacklog
+} from "../metrics/prometheus.js";
 import { RedisPublisher } from "../publishers/redis-publisher.js";
 import { OutboxRepository } from "./outbox.repository.js";
 
@@ -108,6 +113,7 @@ export class OutboxProcessor {
       limit: this.batchSize,
       maxRetries: this.maxRetries
     });
+    await this.refreshBacklogMetric();
     let processed = 0;
     let failed = 0;
 
@@ -135,6 +141,7 @@ export class OutboxProcessor {
     try {
       await this.redisPublisher.publish(toRedisEvent(outboxEvent));
       await this.outboxRepository.markPublished(outboxEvent.id);
+      recordOutboxPublished();
       this.logger.info({
         event: "outbox_event_published",
         outboxEventId: outboxEvent.id,
@@ -144,6 +151,7 @@ export class OutboxProcessor {
       return true;
     } catch (error) {
       await this.outboxRepository.markFailed(outboxEvent.id, error);
+      recordOutboxFailed();
       this.logger.error({
         event: "outbox_event_publish_failed",
         outboxEventId: outboxEvent.id,
@@ -153,6 +161,17 @@ export class OutboxProcessor {
 
       return false;
     }
+  }
+
+  async refreshBacklogMetric() {
+    if (typeof this.outboxRepository.countUnpublishedEvents !== "function") {
+      return;
+    }
+
+    const backlog = await this.outboxRepository.countUnpublishedEvents({
+      maxRetries: this.maxRetries
+    });
+    setOutboxBacklog(backlog);
   }
 }
 

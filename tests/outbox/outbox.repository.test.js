@@ -72,6 +72,16 @@ describe("OutboxRepository", () => {
     expect(events).toHaveLength(1);
   });
 
+  it("counts unpublished events under the retry limit", async () => {
+    const pool = createPool([{ count: 7 }]);
+    const repository = createRepository(pool);
+
+    const count = await repository.countUnpublishedEvents({ maxRetries: 3 });
+
+    expect(pool.query).toHaveBeenCalledWith(expect.stringContaining("COUNT(*)::INTEGER"), [3]);
+    expect(count).toBe(7);
+  });
+
   it("marks events as published", async () => {
     const pool = createPool([{ ...outboxRow, published_at: "2026-06-04T12:01:00.000Z" }]);
     const repository = createRepository(pool);

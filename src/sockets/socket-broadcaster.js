@@ -1,4 +1,5 @@
 import { RoomManager } from "./room-manager.js";
+import { recordSocketBroadcast } from "../metrics/prometheus.js";
 
 const ORDER_EVENT_NAME = "order:event";
 
@@ -42,6 +43,7 @@ export class SocketBroadcaster {
     const rooms = this.roomManager.getRoomsForOrder(order);
 
     this.io.to(rooms).emit(ORDER_EVENT_NAME, changeEvent);
+    recordSocketBroadcast();
     this.logger.info({
       event: "socket_order_event_broadcast",
       eventId: changeEvent.eventId,
