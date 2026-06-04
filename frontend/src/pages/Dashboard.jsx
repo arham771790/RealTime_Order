@@ -1,6 +1,8 @@
 import ConnectionWidget from "../components/common/ConnectionWidget.jsx";
 import SummaryCard from "../components/dashboard/SummaryCard.jsx";
+import LiveEventFeed from "../components/events/LiveEventFeed.jsx";
 import OrdersTable from "../components/orders/OrdersTable.jsx";
+import { useRealtimeEvents } from "../hooks/useRealtimeEvents.js";
 import AppShell from "../layouts/AppShell.jsx";
 
 const summaryCards = [
@@ -31,6 +33,8 @@ const summaryCards = [
 ];
 
 export default function Dashboard() {
+  useRealtimeEvents();
+
   return (
     <AppShell>
       <div className="px-5 py-6 sm:px-8">
@@ -43,14 +47,7 @@ export default function Dashboard() {
           <OrdersTable />
           <aside className="space-y-6">
             <ConnectionWidget />
-            <section className="border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-              <h2 className="text-sm font-semibold text-zinc-950 dark:text-white">
-                Live Event Feed
-              </h2>
-              <div className="mt-5 grid min-h-44 place-items-center text-sm text-zinc-500 dark:text-zinc-400">
-                No events yet
-              </div>
-            </section>
+            <LiveEventFeed />
             <section className="border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
               <h2 className="text-sm font-semibold text-zinc-950 dark:text-white">Subscriptions</h2>
               <div className="mt-5 grid min-h-32 place-items-center text-sm text-zinc-500 dark:text-zinc-400">

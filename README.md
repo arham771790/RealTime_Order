@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F4 adds the frontend Socket.IO connection manager with a shared socket provider, connection status tracking, reconnect state, and latency display in the dashboard widget.
+Commit F5 adds the live event feed, subscribed to `order:event`, with newest events first and a capped history of the latest 100 events.
 
 ## Backend Interfaces
 
