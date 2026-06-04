@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F8 adds frontend demo controls for creating, updating, and deleting orders through the backend REST API so realtime events can be generated during demos.
+Commit F9 adds realtime table reconciliation and recent-change row highlighting so create and update events appear in the orders table without a browser refresh.
 
 ## Backend Interfaces
 

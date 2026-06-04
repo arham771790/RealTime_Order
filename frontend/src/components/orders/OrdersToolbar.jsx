@@ -10,7 +10,9 @@ export default function OrdersToolbar({ search, status, onSearchChange, onStatus
     <div className="flex flex-col gap-3 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between">
       <div>
         <h2 className="text-base font-semibold text-zinc-950 dark:text-white">Orders</h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Live REST data</p>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          REST data with realtime updates
+        </p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
         <label className="min-w-0">

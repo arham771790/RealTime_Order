@@ -1,8 +1,10 @@
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 
 import StatusPill from "../atoms/StatusPill.jsx";
 import { useOrders } from "../../hooks/useOrders.js";
+import { useRealtimeStore } from "../../store/useRealtimeStore.js";
 import { formatDateTime } from "../../utils/date.js";
+import { applyRealtimeEventsToOrders, getRecentlyChangedOrderIds } from "../../utils/orders.js";
 import OrdersToolbar from "./OrdersToolbar.jsx";
 
 const tableHeaders = ["ID", "Customer Name", "Product Name", "Status", "Updated At"];
@@ -13,7 +15,7 @@ function getStatusTone(status) {
     : "neutral";
 }
 
-function OrdersTableBody({ orders, onOrderSelect }) {
+function OrdersTableBody({ changedOrderIds, orders, onOrderSelect }) {
   if (orders.length === 0) {
     return (
       <tr>
@@ -24,31 +26,41 @@ function OrdersTableBody({ orders, onOrderSelect }) {
     );
   }
 
-  return orders.map((order) => (
-    <tr
-      className="cursor-pointer border-b border-zinc-100 transition hover:bg-zinc-50 last:border-0 dark:border-zinc-900 dark:hover:bg-zinc-900/70"
-      key={order.id}
-      onClick={() => onOrderSelect?.(order)}
-    >
-      <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-zinc-950 dark:text-white">
-        #{order.id}
-      </td>
-      <td className="px-5 py-4 text-sm text-zinc-700 dark:text-zinc-300">{order.customerName}</td>
-      <td className="px-5 py-4 text-sm text-zinc-700 dark:text-zinc-300">{order.productName}</td>
-      <td className="px-5 py-4">
-        <StatusPill label={order.status} tone={getStatusTone(order.status)} />
-      </td>
-      <td className="whitespace-nowrap px-5 py-4 text-sm text-zinc-500 dark:text-zinc-400">
-        {formatDateTime(order.updatedAt)}
-      </td>
-    </tr>
-  ));
+  return orders.map((order) => {
+    const isRecentlyChanged = changedOrderIds.has(order.id);
+
+    return (
+      <tr
+        className={`cursor-pointer border-b border-zinc-100 transition last:border-0 dark:border-zinc-900 ${
+          isRecentlyChanged
+            ? "bg-emerald-50 shadow-[inset_4px_0_0_rgb(16_185_129)] dark:bg-emerald-950/30"
+            : "hover:bg-zinc-50 dark:hover:bg-zinc-900/70"
+        }`}
+        key={order.id}
+        onClick={() => onOrderSelect?.(order)}
+      >
+        <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-zinc-950 dark:text-white">
+          #{order.id}
+        </td>
+        <td className="px-5 py-4 text-sm text-zinc-700 dark:text-zinc-300">{order.customerName}</td>
+        <td className="px-5 py-4 text-sm text-zinc-700 dark:text-zinc-300">{order.productName}</td>
+        <td className="px-5 py-4">
+          <StatusPill label={order.status} tone={getStatusTone(order.status)} />
+        </td>
+        <td className="whitespace-nowrap px-5 py-4 text-sm text-zinc-500 dark:text-zinc-400">
+          {formatDateTime(order.updatedAt)}
+        </td>
+      </tr>
+    );
+  });
 }
 
 export default function OrdersTable({ onOrderSelect }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [highlightNow, setHighlightNow] = useState(Date.now());
   const deferredSearch = useDeferredValue(search);
+  const { events } = useRealtimeStore();
   const {
     data: orders = [],
     isLoading,
@@ -60,6 +72,30 @@ export default function OrdersTable({ onOrderSelect }) {
     limit: 100,
     offset: 0
   });
+  const realtimeOrders = applyRealtimeEventsToOrders(orders, events);
+  const filteredOrders = realtimeOrders.filter((order) => {
+    const matchesSearch =
+      deferredSearch.trim().length === 0 ||
+      order.customerName.toLowerCase().includes(deferredSearch.trim().toLowerCase());
+    const matchesStatus = status.length === 0 || order.status === status;
+
+    return matchesSearch && matchesStatus;
+  });
+  const changedOrderIds = getRecentlyChangedOrderIds(events, highlightNow);
+
+  useEffect(() => {
+    if (events.length === 0) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      setHighlightNow(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [events.length]);
 
   return (
     <section className="border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
@@ -106,7 +142,11 @@ export default function OrdersTable({ onOrderSelect }) {
               </tr>
             ) : null}
             {!isLoading && !isError ? (
-              <OrdersTableBody onOrderSelect={onOrderSelect} orders={orders} />
+              <OrdersTableBody
+                changedOrderIds={changedOrderIds}
+                onOrderSelect={onOrderSelect}
+                orders={filteredOrders}
+              />
             ) : null}
           </tbody>
         </table>
