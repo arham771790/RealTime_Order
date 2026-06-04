@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 13 integrates PostgreSQL change listening with Redis publishing through `OrderChangePipeline`, completing the first LISTEN -> Publish -> Redis path. Websocket broadcasting and the frontend dashboard arrive in later commits.
+Commit 14 adds Redis-to-websocket broadcasting through `OrderEventSubscriber` and `SocketBroadcaster`, completing the LISTEN -> Redis -> Socket.IO fanout path. The React dashboard starts after this backend milestone.
 
 ## Backend Interfaces
 
@@ -53,6 +53,7 @@ Socket.IO is attached to the same backend HTTP server.
 - `subscribe` joins a room and acknowledges with `{ ok, room, rooms }`
 - `unsubscribe` leaves a room and acknowledges with `{ ok, room, rooms }`
 - `subscription:updated` is emitted after room membership changes
+- `order:event` is emitted to subscribed rooms when Redis receives an order change event
 
 Supported rooms:
 
@@ -100,6 +101,10 @@ Redis events are published to `REDIS_CHANNEL` as JSON strings. The publisher and
 ## Order Change Pipeline
 
 `OrderChangePipeline` listens for parsed `DBChangeListener` `change` events and publishes each event to Redis. Publish failures are logged and emitted as `publish_error` events without stopping the listener.
+
+## Socket Broadcasting
+
+`OrderEventSubscriber` consumes Redis events and asks `SocketBroadcaster` to fan each order event out to `admin:global`, `order:{id}`, `customer:{name}`, and `status:{status}` rooms.
 
 ## Planned Delivery Roadmap
 

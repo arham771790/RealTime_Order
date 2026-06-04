@@ -1,5 +1,8 @@
 import { EventEmitter } from "node:events";
 
+import { RedisPublisher } from "../publishers/redis-publisher.js";
+import { DBChangeListener } from "./db-change-listener.js";
+
 export class OrderChangePipeline extends EventEmitter {
   constructor({ dbChangeListener, redisPublisher, logger = console } = {}) {
     super();
@@ -85,6 +88,14 @@ export class OrderChangePipeline extends EventEmitter {
     await this.redisPublisher.close();
     this.logger.info({ event: "order_change_pipeline_stopped" });
   }
+}
+
+export function createOrderChangePipeline({ logger = console } = {}) {
+  return new OrderChangePipeline({
+    dbChangeListener: new DBChangeListener({ logger }),
+    redisPublisher: new RedisPublisher({ logger }),
+    logger
+  });
 }
 
 export default OrderChangePipeline;

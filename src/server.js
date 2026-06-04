@@ -5,13 +5,17 @@ import env from "./config/env.js";
 import { connectWithRetry } from "./db/connection.js";
 import pool from "./db/pool.js";
 import { registerDatabaseShutdown } from "./db/shutdown.js";
+import { createOrderChangePipeline } from "./listeners/order-change-pipeline.js";
 import { createSocketServer } from "./sockets/socket-server.js";
+import { createOrderEventSubscriber } from "./subscribers/order-event-subscriber.js";
 
 export async function startServer({
   app = createApp(),
   dbPool = pool,
   logger = console,
-  port = env.port
+  port = env.port,
+  orderChangePipeline,
+  orderEventSubscriber
 } = {}) {
   await connectWithRetry(dbPool, {
     attempts: env.database.retryAttempts,
@@ -21,12 +25,24 @@ export async function startServer({
 
   const server = createServer(app);
 
-  createSocketServer(server, {
+  const { io } = createSocketServer(server, {
     corsOrigin: env.socket.corsOrigin,
     pingIntervalMs: env.socket.pingIntervalMs,
     pingTimeoutMs: env.socket.pingTimeoutMs,
     logger
   });
+  const resolvedOrderChangePipeline = orderChangePipeline ?? createOrderChangePipeline({ logger });
+  const resolvedOrderEventSubscriber =
+    orderEventSubscriber ?? createOrderEventSubscriber({ io, logger });
+
+  try {
+    await resolvedOrderEventSubscriber.start();
+    await resolvedOrderChangePipeline.start();
+  } catch (error) {
+    await resolvedOrderEventSubscriber.stop();
+    await resolvedOrderChangePipeline.stop();
+    throw error;
+  }
 
   server.listen(port, () => {
     logger.info(`HTTP server listening on port ${port}`);
