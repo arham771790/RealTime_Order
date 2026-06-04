@@ -1,6 +1,9 @@
-const navItems = ["Dashboard", "Orders", "Events", "Subscriptions"];
+const navItems = [
+  { id: "dashboard", label: "Dashboard" },
+  { id: "demo", label: "Demo Controls" }
+];
 
-export default function AppShell({ children }) {
+export default function AppShell({ activePage = "dashboard", children, onNavigate = () => {} }) {
   return (
     <main className="min-h-screen bg-zinc-100 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100">
       <div className="flex min-h-screen">
@@ -15,17 +18,18 @@ export default function AppShell({ children }) {
           </div>
           <nav className="mt-10 space-y-1">
             {navItems.map((item) => (
-              <a
+              <button
                 className={`block border px-3 py-2 text-sm font-medium ${
-                  item === "Dashboard"
+                  item.id === activePage
                     ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950"
                     : "border-transparent text-zinc-500 hover:border-zinc-200 hover:text-zinc-950 dark:text-zinc-400 dark:hover:border-zinc-800 dark:hover:text-white"
                 }`}
-                href="#dashboard"
-                key={item}
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                type="button"
               >
-                {item}
-              </a>
+                {item.label}
+              </button>
             ))}
           </nav>
         </aside>
@@ -42,6 +46,22 @@ export default function AppShell({ children }) {
               </div>
               <div className="text-sm text-zinc-500 dark:text-zinc-400">localhost:3000</div>
             </div>
+            <nav className="mt-4 flex gap-2 lg:hidden">
+              {navItems.map((item) => (
+                <button
+                  className={`border px-3 py-2 text-sm font-medium ${
+                    item.id === activePage
+                      ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950"
+                      : "border-zinc-300 text-zinc-600 dark:border-zinc-800 dark:text-zinc-300"
+                  }`}
+                  key={item.id}
+                  onClick={() => onNavigate(item.id)}
+                  type="button"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
           </header>
           {children}
         </section>

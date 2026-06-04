@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F7 adds an order detail modal opened from table rows, with live updates from matching realtime order events while the modal is open.
+Commit F8 adds frontend demo controls for creating, updating, and deleting orders through the backend REST API so realtime events can be generated during demos.
 
 ## Backend Interfaces
 

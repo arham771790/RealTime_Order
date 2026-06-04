@@ -36,13 +36,13 @@ const summaryCards = [
   }
 ];
 
-export default function Dashboard() {
+export default function Dashboard({ activePage, onNavigate }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   useRealtimeEvents();
 
   return (
-    <AppShell>
+    <AppShell activePage={activePage} onNavigate={onNavigate}>
       <div className="px-5 py-6 sm:px-8">
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {summaryCards.map((card) => (
