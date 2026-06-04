@@ -1,8 +1,9 @@
 import { RedisSubscriber } from "./redis-subscriber.js";
 import { SocketBroadcaster } from "../sockets/socket-broadcaster.js";
+import { EventCoalescer } from "../utils/event-coalescer.js";
 
 export class OrderEventSubscriber {
-  constructor({ redisSubscriber, socketBroadcaster, logger = console } = {}) {
+  constructor({ eventCoalescer, logger = console, redisSubscriber, socketBroadcaster } = {}) {
     if (!redisSubscriber) {
       throw new Error("OrderEventSubscriber requires a Redis subscriber.");
     }
@@ -13,9 +14,11 @@ export class OrderEventSubscriber {
 
     this.redisSubscriber = redisSubscriber;
     this.socketBroadcaster = socketBroadcaster;
+    this.eventCoalescer = eventCoalescer ?? new EventCoalescer({ logger });
     this.logger = logger;
     this.isRunning = false;
     this.handleEvent = this.handleEvent.bind(this);
+    this.forwardEvent = this.forwardEvent.bind(this);
   }
 
   async start() {
@@ -36,6 +39,10 @@ export class OrderEventSubscriber {
   }
 
   handleEvent(changeEvent) {
+    this.eventCoalescer.enqueue(changeEvent, this.forwardEvent);
+  }
+
+  forwardEvent(changeEvent) {
     try {
       const rooms = this.socketBroadcaster.broadcastOrderEvent(changeEvent);
       this.logger.info({
@@ -59,6 +66,8 @@ export class OrderEventSubscriber {
 
     this.isRunning = false;
     this.redisSubscriber.off("event", this.handleEvent);
+    this.eventCoalescer.flushAll();
+    this.eventCoalescer.clear();
     await this.redisSubscriber.close();
     this.logger.info({ event: "order_event_subscriber_stopped" });
   }

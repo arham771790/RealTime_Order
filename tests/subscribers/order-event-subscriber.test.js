@@ -25,6 +25,14 @@ function createSocketBroadcaster(overrides = {}) {
   };
 }
 
+function createEventCoalescer() {
+  return {
+    clear: jest.fn(),
+    enqueue: jest.fn((event, flushCallback) => flushCallback(event)),
+    flushAll: jest.fn()
+  };
+}
+
 const changeEvent = {
   eventId: "evt-1",
   operation: "INSERT",
@@ -50,7 +58,11 @@ describe("OrderEventSubscriber", () => {
   it("starts the Redis subscriber", async () => {
     const redisSubscriber = createRedisSubscriber();
     const socketBroadcaster = createSocketBroadcaster();
-    const subscriber = new OrderEventSubscriber({ redisSubscriber, socketBroadcaster });
+    const subscriber = new OrderEventSubscriber({
+      eventCoalescer: createEventCoalescer(),
+      redisSubscriber,
+      socketBroadcaster
+    });
 
     await subscriber.start();
 
@@ -61,7 +73,11 @@ describe("OrderEventSubscriber", () => {
   it("broadcasts Redis order events to sockets", async () => {
     const redisSubscriber = createRedisSubscriber();
     const socketBroadcaster = createSocketBroadcaster();
-    const subscriber = new OrderEventSubscriber({ redisSubscriber, socketBroadcaster });
+    const subscriber = new OrderEventSubscriber({
+      eventCoalescer: createEventCoalescer(),
+      redisSubscriber,
+      socketBroadcaster
+    });
 
     await subscriber.start();
     redisSubscriber.emit("event", changeEvent);
@@ -77,7 +93,12 @@ describe("OrderEventSubscriber", () => {
         throw new Error("socket unavailable");
       })
     });
-    const subscriber = new OrderEventSubscriber({ redisSubscriber, socketBroadcaster, logger });
+    const subscriber = new OrderEventSubscriber({
+      eventCoalescer: createEventCoalescer(),
+      logger,
+      redisSubscriber,
+      socketBroadcaster
+    });
 
     await subscriber.start();
     redisSubscriber.emit("event", changeEvent);
@@ -92,13 +113,36 @@ describe("OrderEventSubscriber", () => {
   it("stops and removes the Redis event handler", async () => {
     const redisSubscriber = createRedisSubscriber();
     const socketBroadcaster = createSocketBroadcaster();
-    const subscriber = new OrderEventSubscriber({ redisSubscriber, socketBroadcaster });
+    const eventCoalescer = createEventCoalescer();
+    const subscriber = new OrderEventSubscriber({
+      eventCoalescer,
+      redisSubscriber,
+      socketBroadcaster
+    });
 
     await subscriber.start();
     await subscriber.stop();
     redisSubscriber.emit("event", changeEvent);
 
     expect(redisSubscriber.close).toHaveBeenCalledTimes(1);
+    expect(eventCoalescer.flushAll).toHaveBeenCalledTimes(1);
+    expect(eventCoalescer.clear).toHaveBeenCalledTimes(1);
     expect(socketBroadcaster.broadcastOrderEvent).not.toHaveBeenCalled();
+  });
+
+  it("coalesces Redis order events before broadcasting", async () => {
+    const redisSubscriber = createRedisSubscriber();
+    const eventCoalescer = createEventCoalescer();
+    const socketBroadcaster = createSocketBroadcaster();
+    const subscriber = new OrderEventSubscriber({
+      eventCoalescer,
+      redisSubscriber,
+      socketBroadcaster
+    });
+
+    await subscriber.start();
+    redisSubscriber.emit("event", changeEvent);
+
+    expect(eventCoalescer.enqueue).toHaveBeenCalledWith(changeEvent, expect.any(Function));
   });
 });

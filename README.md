@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 16 adds the outbox processor that polls unpublished outbox events every 5 seconds, publishes batches to Redis, marks successful events complete, and records failures for retry.
+Commit 17 adds 100ms websocket event coalescing so duplicate order updates collapse into the final event before broadcasting to browser clients.
 
 ## Backend Interfaces
 
