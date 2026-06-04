@@ -1,6 +1,9 @@
+import { useState } from "react";
+
 import ConnectionWidget from "../components/common/ConnectionWidget.jsx";
 import SummaryCard from "../components/dashboard/SummaryCard.jsx";
 import LiveEventFeed from "../components/events/LiveEventFeed.jsx";
+import OrderDetailModal from "../components/orders/OrderDetailModal.jsx";
 import OrdersTable from "../components/orders/OrdersTable.jsx";
 import RoomSubscriptionPanel from "../components/subscriptions/RoomSubscriptionPanel.jsx";
 import { useRealtimeEvents } from "../hooks/useRealtimeEvents.js";
@@ -34,6 +37,8 @@ const summaryCards = [
 ];
 
 export default function Dashboard() {
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
   useRealtimeEvents();
 
   return (
@@ -45,7 +50,7 @@ export default function Dashboard() {
           ))}
         </section>
         <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <OrdersTable />
+          <OrdersTable onOrderSelect={setSelectedOrder} />
           <aside className="space-y-6">
             <ConnectionWidget />
             <LiveEventFeed />
@@ -53,6 +58,9 @@ export default function Dashboard() {
           </aside>
         </section>
       </div>
+      {selectedOrder ? (
+        <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+      ) : null}
     </AppShell>
   );
 }

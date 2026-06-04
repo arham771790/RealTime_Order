@@ -13,7 +13,7 @@ function getStatusTone(status) {
     : "neutral";
 }
 
-function OrdersTableBody({ orders }) {
+function OrdersTableBody({ orders, onOrderSelect }) {
   if (orders.length === 0) {
     return (
       <tr>
@@ -25,7 +25,11 @@ function OrdersTableBody({ orders }) {
   }
 
   return orders.map((order) => (
-    <tr className="border-b border-zinc-100 last:border-0 dark:border-zinc-900" key={order.id}>
+    <tr
+      className="cursor-pointer border-b border-zinc-100 transition hover:bg-zinc-50 last:border-0 dark:border-zinc-900 dark:hover:bg-zinc-900/70"
+      key={order.id}
+      onClick={() => onOrderSelect?.(order)}
+    >
       <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-zinc-950 dark:text-white">
         #{order.id}
       </td>
@@ -41,7 +45,7 @@ function OrdersTableBody({ orders }) {
   ));
 }
 
-export default function OrdersTable() {
+export default function OrdersTable({ onOrderSelect }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const deferredSearch = useDeferredValue(search);
@@ -101,7 +105,9 @@ export default function OrdersTable() {
                 </td>
               </tr>
             ) : null}
-            {!isLoading && !isError ? <OrdersTableBody orders={orders} /> : null}
+            {!isLoading && !isError ? (
+              <OrdersTableBody onOrderSelect={onOrderSelect} orders={orders} />
+            ) : null}
           </tbody>
         </table>
       </div>

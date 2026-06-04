@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit F6 adds room subscription controls for `admin:global`, `order:{id}`, `customer:{name}`, and `status:{status}`, including active subscription state and unsubscribe actions.
+Commit F7 adds an order detail modal opened from table rows, with live updates from matching realtime order events while the modal is open.
 
 ## Backend Interfaces
 
