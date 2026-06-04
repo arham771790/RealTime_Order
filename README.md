@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 15 adds the transactional outbox repository and writes order mutation events to `outbox_events` inside the same PostgreSQL transaction as the order change.
+Commit 16 adds the outbox processor that polls unpublished outbox events every 5 seconds, publishes batches to Redis, marks successful events complete, and records failures for retry.
 
 ## Backend Interfaces
 
@@ -223,6 +223,9 @@ Current environment variables:
 - `REDIS_CHANNEL` for order event fanout
 - `REDIS_RECONNECT_DELAY_MS` for Redis reconnect backoff
 - `REDIS_MAX_RECONNECT_DELAY_MS` for Redis reconnect backoff cap
+- `OUTBOX_POLL_INTERVAL_MS` for outbox polling cadence
+- `OUTBOX_BATCH_SIZE` for outbox batch publishing
+- `OUTBOX_MAX_RETRIES` for retry cutoff before an outbox event is skipped
 
 ## Available Scripts
 

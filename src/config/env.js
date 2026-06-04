@@ -16,6 +16,9 @@ const DEFAULT_REDIS_URL = "redis://localhost:6379";
 const DEFAULT_REDIS_CHANNEL = "order_events";
 const DEFAULT_REDIS_RECONNECT_DELAY_MS = 1000;
 const DEFAULT_REDIS_MAX_RECONNECT_DELAY_MS = 30000;
+const DEFAULT_OUTBOX_POLL_INTERVAL_MS = 5000;
+const DEFAULT_OUTBOX_BATCH_SIZE = 50;
+const DEFAULT_OUTBOX_MAX_RETRIES = 5;
 
 dotenv.config();
 
@@ -132,6 +135,23 @@ export const env = Object.freeze({
       "REDIS_MAX_RECONNECT_DELAY_MS",
       process.env.REDIS_MAX_RECONNECT_DELAY_MS,
       DEFAULT_REDIS_MAX_RECONNECT_DELAY_MS
+    )
+  }),
+  outbox: Object.freeze({
+    pollIntervalMs: parsePositiveInteger(
+      "OUTBOX_POLL_INTERVAL_MS",
+      process.env.OUTBOX_POLL_INTERVAL_MS,
+      DEFAULT_OUTBOX_POLL_INTERVAL_MS
+    ),
+    batchSize: parsePositiveInteger(
+      "OUTBOX_BATCH_SIZE",
+      process.env.OUTBOX_BATCH_SIZE,
+      DEFAULT_OUTBOX_BATCH_SIZE
+    ),
+    maxRetries: parsePositiveInteger(
+      "OUTBOX_MAX_RETRIES",
+      process.env.OUTBOX_MAX_RETRIES,
+      DEFAULT_OUTBOX_MAX_RETRIES
     )
   })
 });

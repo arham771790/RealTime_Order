@@ -6,6 +6,7 @@ import { connectWithRetry } from "./db/connection.js";
 import pool from "./db/pool.js";
 import { registerDatabaseShutdown } from "./db/shutdown.js";
 import { createOrderChangePipeline } from "./listeners/order-change-pipeline.js";
+import { createOutboxProcessor } from "./outbox/outbox-processor.js";
 import { createSocketServer } from "./sockets/socket-server.js";
 import { createOrderEventSubscriber } from "./subscribers/order-event-subscriber.js";
 
@@ -15,7 +16,8 @@ export async function startServer({
   logger = console,
   port = env.port,
   orderChangePipeline,
-  orderEventSubscriber
+  orderEventSubscriber,
+  outboxProcessor
 } = {}) {
   await connectWithRetry(dbPool, {
     attempts: env.database.retryAttempts,
@@ -34,11 +36,14 @@ export async function startServer({
   const resolvedOrderChangePipeline = orderChangePipeline ?? createOrderChangePipeline({ logger });
   const resolvedOrderEventSubscriber =
     orderEventSubscriber ?? createOrderEventSubscriber({ io, logger });
+  const resolvedOutboxProcessor = outboxProcessor ?? createOutboxProcessor({ dbPool, logger });
 
   try {
     await resolvedOrderEventSubscriber.start();
     await resolvedOrderChangePipeline.start();
+    await resolvedOutboxProcessor.start();
   } catch (error) {
+    await resolvedOutboxProcessor.stop();
     await resolvedOrderEventSubscriber.stop();
     await resolvedOrderChangePipeline.stop();
     throw error;
