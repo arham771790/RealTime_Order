@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time Orders Demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      main {
+        margin: 0 auto;
+        max-width: 1080px;
+        padding: 32px 20px;
+      }
+
+      .hero,
+      .panel {
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        background: rgba(15, 23, 42, 0.72);
+        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.32);
+      }
+
+      .hero {
+        padding: 28px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(0, 1fr);
+        margin-top: 18px;
+      }
+
+      @media (min-width: 860px) {
+        .grid {
+          grid-template-columns: 340px minmax(0, 1fr);
+        }
+      }
+
+      .panel {
+        padding: 20px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 5vw, 4rem);
+        letter-spacing: -0.06em;
+        line-height: 0.95;
+      }
+
+      h2 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+      }
+
+      .muted {
+        color: #94a3b8;
+        margin-top: 12px;
+      }
+
+      .status {
+        display: inline-flex;
+        font-size: 0.85rem;
+        font-weight: 700;
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .dot {
+        background: #64748b;
+        border-radius: 999px;
+        height: 10px;
+        margin-top: 4px;
+        width: 10px;
+      }
+
+      .connected .dot {
+        background: #10b981;
+      }
+
+      .reconnecting .dot {
+        background: #f59e0b;
+      }
+
+      label {
+        color: #cbd5e1;
+        display: block;
+        font-size: 0.86rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      input,
+      select,
+      button {
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-sizing: border-box;
+        font: inherit;
+        min-height: 42px;
+        width: 100%;
+      }
+
+      input,
+      select {
+        background: rgba(15, 23, 42, 0.9);
+        color: #f8fafc;
+        margin-bottom: 12px;
+        padding: 0 12px;
+      }
+
+      button {
+        background: #e2e8f0;
+        color: #020617;
+        cursor: pointer;
+        font-weight: 800;
+        margin-top: 4px;
+      }
+
+      button.secondary {
+        background: transparent;
+        color: #e2e8f0;
+      }
+
+      .rooms,
+      .events {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .rooms li,
+      .events li {
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        margin-top: 8px;
+        padding: 10px;
+      }
+
+      .events {
+        max-height: 520px;
+        overflow: auto;
+      }
+
+      code {
+        color: #a7f3d0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <p><code>Socket.IO</code> browser demo</p>
+        <h1>Real-Time Orders Demo</h1>
+        <p class="muted">
+          Subscribe to rooms and watch order events arrive without polling or refreshing.
+        </p>
+        <div class="status disconnected" id="connectionStatus">
+          <span class="dot"></span>
+          <span>Disconnected</span>
+        </div>
+      </section>
+
+      <section class="grid">
+        <aside class="panel">
+          <h2>Room Subscription</h2>
+          <label for="roomType">Room type</label>
+          <select id="roomType">
+            <option value="admin:global">admin:global</option>
+            <option value="order">order:{id}</option>
+            <option value="customer">customer:{name}</option>
+            <option value="status">status:{status}</option>
+          </select>
+
+          <label for="roomValue">Room value</label>
+          <input id="roomValue" placeholder="42, Ada Lovelace, or pending" />
+
+          <button id="subscribeButton">Subscribe</button>
+          <button class="secondary" id="unsubscribeButton">Unsubscribe</button>
+
+          <h2 style="margin-top: 24px">Active Rooms</h2>
+          <ul class="rooms" id="activeRooms"></ul>
+        </aside>
+
+        <section class="panel">
+          <h2>Live Event Feed <span class="muted" id="eventCount">(0/100)</span></h2>
+          <ul class="events" id="events"></ul>
+        </section>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const activeRooms = new Set();
+      const events = [];
+      const maxEvents = 100;
+
+      const connectionStatus = document.getElementById("connectionStatus");
+      const roomType = document.getElementById("roomType");
+      const roomValue = document.getElementById("roomValue");
+      const activeRoomsList = document.getElementById("activeRooms");
+      const eventsList = document.getElementById("events");
+      const eventCount = document.getElementById("eventCount");
+
+      function getSelectedRoom() {
+        if (roomType.value === "admin:global") {
+          return "admin:global";
+        }
+
+        return `${roomType.value}:${roomValue.value.trim()}`;
+      }
+
+      function setConnectionState(state) {
+        connectionStatus.className = `status ${state}`;
+        connectionStatus.lastElementChild.textContent =
+          state === "connected"
+            ? "Connected"
+            : state === "reconnecting"
+              ? "Reconnecting"
+              : "Disconnected";
+      }
+
+      function renderRooms() {
+        activeRoomsList.innerHTML = "";
+
+        for (const room of [...activeRooms].sort()) {
+          const item = document.createElement("li");
+          item.textContent = room;
+          activeRoomsList.append(item);
+        }
+      }
+
+      function renderEvents() {
+        eventsList.innerHTML = "";
+        eventCount.textContent = `(${events.length}/${maxEvents})`;
+
+        for (const event of events) {
+          const item = document.createElement("li");
+          const timestamp = new Date(event.receivedAt).toLocaleTimeString();
+          const orderId = event.orderId ?? event.new?.id ?? event.old?.id ?? "unknown";
+          item.textContent = `[${timestamp}] Order #${orderId} ${event.operation}`;
+          eventsList.append(item);
+        }
+      }
+
+      socket.on("connect", () => setConnectionState("connected"));
+      socket.on("disconnect", () => setConnectionState("disconnected"));
+      socket.io.on("reconnect_attempt", () => setConnectionState("reconnecting"));
+
+      socket.on("order:event", (event) => {
+        events.unshift({ ...event, receivedAt: new Date().toISOString() });
+        events.splice(maxEvents);
+        renderEvents();
+      });
+
+      document.getElementById("subscribeButton").addEventListener("click", () => {
+        const room = getSelectedRoom();
+
+        if (!room.endsWith(":")) {
+          socket.emit("subscribe", { room });
+          activeRooms.add(room);
+          renderRooms();
+        }
+      });
+
+      document.getElementById("unsubscribeButton").addEventListener("click", () => {
+        const room = getSelectedRoom();
+        socket.emit("unsubscribe", { room });
+        activeRooms.delete(room);
+        renderRooms();
+      });
+
+      renderRooms();
+      renderEvents();
+    </script>
+  </body>
+</html>

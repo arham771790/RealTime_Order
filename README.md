@@ -4,7 +4,7 @@ Production-grade real-time order update platform built incrementally with profes
 
 ## Current Status
 
-Commit 18 adds UUID event-id guarantees, client-side duplicate suppression in the React realtime store, and documentation for bounded event-id deduplication.
+Commit 19 adds a static browser demo client at `/demo.html` for Socket.IO connection checks, room subscriptions, and live order event logs.
 
 ## Backend Interfaces
 
